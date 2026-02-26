@@ -2,92 +2,79 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<title>Doner</title>
-<style>
-body{font-family:sans-serif;padding:20px;}
-input,select,button{display:block;margin:10px 0;padding:8px;width:300px;}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doner – Walkathon</title>
 </head>
 <body>
+<h1>Doner beløb</h1>
 
-<a href="index.html">← Tilbage</a>
-<h1>Doner</h1>
-
-<form id="form">
-
-<input type="tel" id="phone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
-<input type="email" id="mail" placeholder="Mail" required>
-<input type="text" id="name" placeholder="Navn" required>
-
-<select id="recipient" required></select>
-
-<input type="number" id="flat" placeholder="Fast beløb">
-<input type="number" id="perkm" placeholder="Beløb pr km">
-
-<button type="submit">Doner</button>
-
+<form id="sponsorForm">
+  <input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
+  <input type="email" id="sponsorEmail" placeholder="Email" required>
+  <input type="text" id="sponsorName" placeholder="Dit navn" required>
+  <select id="sponsorRecipient" required>
+    <option value="">Vælg deltager</option>
+  </select>
+  <input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
+  <input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
+  <button type="submit">Tilføj donation</button>
 </form>
 
 <script>
-const API_URL="DIN_WEBAPP_URL_HER";
+const API_URL = "https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+let participants = [];
 
-let participants=[];
-let donors=[];
+// Hent deltagere og fyld dropdown
+async function fetchParticipants(){
+  const res = await fetch(`${API_URL}?sheet=Deltagere`);
+  participants = await res.json();
 
-async function loadAll(){
-  const p = await fetch(`${API_URL}?sheet=Deltagere`);
-  const d = await fetch(`${API_URL}?sheet=Donationer`);
-
-  participants = await p.json();
-  donors = await d.json();
-
-  const sel=document.getElementById("recipient");
-  sel.innerHTML="<option value=''>Vælg modtager</option>";
+  const sel = document.getElementById("sponsorRecipient");
+  sel.innerHTML = '<option value="">Vælg deltager</option>';
   participants.forEach(p=>{
-    sel.innerHTML+=`<option>${p.Navn}</option>`;
+    const opt = document.createElement("option");
+    opt.value = p.Navn;       // Modtager hedder nu Navn i sheets
+    opt.textContent = p.Navn;
+    sel.appendChild(opt);
   });
 }
+fetchParticipants();
 
-loadAll();
-
-/* Autofill ved eksisterende telefon */
-document.getElementById("phone").addEventListener("blur",()=>{
-  const phone = phoneInput.value;
-  const match = donors.find(d=>d.Telefon===phone);
-
-  if(match){
-    mail.value = match.Mail;
-    name.value = match.Navn;
-  }
-});
-
-const phoneInput=document.getElementById("phone");
-const mail=document.getElementById("mail");
-const name=document.getElementById("name");
-const recipient=document.getElementById("recipient");
-const flat=document.getElementById("flat");
-const perkm=document.getElementById("perkm");
-
-document.getElementById("form").addEventListener("submit",async e=>{
+document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   e.preventDefault();
+  
+  const phone = document.getElementById("sponsorPhone").value.trim();
+  const email = document.getElementById("sponsorEmail").value.trim();
+  const name = document.getElementById("sponsorName").value.trim();
+  const recipient = document.getElementById("sponsorRecipient").value;
+  const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
+  const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
 
-  await fetch(`${API_URL}?sheet=Donationer`,{
+  if(!phone || !email || !name || !recipient || (flat<=0 && perKm<=0)){
+    alert("Udfyld alle felter korrekt");
+    return;
+  }
+
+  // Tjek om donor allerede findes (telefon = unik)
+  const existingDonor = donors?.find(d=>d.Telefon===phone);
+
+  const donationData = {
+    Telefon: phone,
+    Email: email,
+    Navn: name,
+    Modtager: recipient,
+    FastBeløb: flat,
+    BeløbPrKm: perKm
+  };
+
+  await fetch(`${API_URL}?sheet=Donationer`, {
     method:"POST",
-    body:JSON.stringify({
-      Telefon:phoneInput.value,
-      Mail:mail.value,
-      Navn:name.value,
-      Modtager:recipient.value,
-      FastBeløb:Number(flat.value||0),
-      BeløbPrKm:Number(perkm.value||0)
-    })
+    body:JSON.stringify(donationData)
   });
 
-  alert("Donation registreret");
-  form.reset();
-  loadAll();
+  alert("Donation registreret!");
+  document.getElementById("sponsorForm").reset();
 });
 </script>
-
 </body>
 </html>
