@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Doner – Walkathon</title>
+<style>
+input, select, button {
+  display:block;
+  margin:10px 0;
+  padding:8px;
+  font-size:1em;
+  width:300px;
+}
+select option[disabled] {
+  color: #999;
+}
+</style>
 </head>
 <body>
 <h1>Doner beløb</h1>
@@ -13,7 +25,7 @@
   <input type="email" id="sponsorEmail" placeholder="Email" required>
   <input type="text" id="sponsorName" placeholder="Dit navn" required>
   <select id="sponsorRecipient" required>
-    <option value="">Vælg deltager</option>
+    <option value="" disabled selected>Modtager</option>
   </select>
   <input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
   <input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
@@ -30,10 +42,10 @@ async function fetchParticipants(){
   participants = await res.json();
 
   const sel = document.getElementById("sponsorRecipient");
-  sel.innerHTML = '<option value="">Vælg deltager</option>';
+  sel.innerHTML = '<option value="" disabled selected>Modtager</option>'; // placeholder
   participants.forEach(p=>{
     const opt = document.createElement("option");
-    opt.value = p.Navn;       // Modtager hedder nu Navn i sheets
+    opt.value = p.Navn;       // Modtager hedder Navn i sheets
     opt.textContent = p.Navn;
     sel.appendChild(opt);
   });
@@ -55,9 +67,7 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
     return;
   }
 
-  // Tjek om donor allerede findes (telefon = unik)
-  const existingDonor = donors?.find(d=>d.Telefon===phone);
-
+  // Donation data
   const donationData = {
     Telefon: phone,
     Email: email,
