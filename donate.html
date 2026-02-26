@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doner – Walkathon</title>
+<title>Donér – Walkathon</title>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap");
 :root{
@@ -66,6 +66,9 @@ header{
   align-items:stretch;
   margin-bottom:28px;
 }
+.intro{margin-bottom:24px;}
+.intro h1{font-size:2.2rem;margin-bottom:10px;}
+.intro p{color:var(--muted);line-height:1.7;}
 .hero-card{
   background:var(--panel);
   border-radius:var(--radius);
@@ -184,38 +187,21 @@ select option[disabled]{color:#999;}
     <div class="nav-links">
       <a href="index.html">Oversigt</a>
       <a href="signup.html">Tilmeld deltager</a>
-      <a class="primary" href="donate.html">Doner beloeb</a>
+      <a class="primary" href="donate.html">Donér beløb</a>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <section class="hero">
-    <div class="hero-card">
-      <h1>Doner med mening</h1>
-      <p>Stot din deltager direkte. Vaelg et engangsbeloeb, beloeb pr. km eller kombiner begge for maksimal effekt.</p>
-      <div class="impact">
-        <div class="pill">Hver km taeller</div>
-        <div class="pill">Alle bidrag gaar til formaalet</div>
-      </div>
-    </div>
-    <div class="hero-side">
-      <div>
-        <h2>Fede walkathon-features</h2>
-        <ul>
-          <li>Live overblik pr. deltager</li>
-          <li>Fleksible bidrag: fast + pr. km</li>
-          <li>Klar kvittering via email</li>
-        </ul>
-      </div>
-      <div class="note">Tip: dit beloeb pr. km beregnes automatisk efter deltagerens distance.</div>
-    </div>
+  <section class="intro">
+    <h1>Donér</h1>
+    <p>Vælg en deltager og støt med et engangsbeløb, beløb pr. km eller begge dele.</p>
   </section>
 
   <section class="grid">
     <div class="card">
       <h3>Donation</h3>
-      <p class="muted">Vaelg en deltager og udfyld dine oplysninger. Din donation registreres med det samme.</p>
+      <p class="muted">Vælg en deltager og udfyld dine oplysninger. Din donation registreres med det samme.</p>
       <form id="sponsorForm" novalidate>
         <div class="row">
           <div class="field">
@@ -234,33 +220,19 @@ select option[disabled]{color:#999;}
         </div>
 
         <div class="field">
-          <label for="participantSearch">Vaelg deltager</label>
-          <input type="text" id="participantSearch" placeholder="Sog efter deltager">
+          <label for="participantSearch">Vælg deltager</label>
+          <input type="text" id="participantSearch" placeholder="Søg efter deltager">
           <select id="sponsorRecipient" required></select>
-          <div class="help" id="recipientHelp">Du kan soge og vaelge blandt alle tilmeldte.</div>
-        </div>
-
-        <div class="field">
-          <label>Populaere deltagere</label>
-          <div class="quick-picks" id="quickPicks"></div>
-        </div>
-
-        <div class="field">
-          <label>Donationstype</label>
-          <div class="donation-type" id="donationType">
-            <button type="button" class="tag active" data-type="both">Fast + pr. km</button>
-            <button type="button" class="tag" data-type="flat">Kun fast</button>
-            <button type="button" class="tag" data-type="perkm">Kun pr. km</button>
-          </div>
+          <div class="help" id="recipientHelp">Du kan søge og vælge blandt alle tilmeldte.</div>
         </div>
 
         <div class="row">
           <div class="field">
-            <label for="sponsorFlat">Engangsbeloeb (kr.)</label>
+            <label for="sponsorFlat">Engangsbeløb (kr.)</label>
             <input type="number" id="sponsorFlat" min="0" step="1" placeholder="Fx 200">
           </div>
           <div class="field">
-            <label for="sponsorPerKm">Beloeb pr. km (kr.)</label>
+            <label for="sponsorPerKm">Beløb pr. km (kr.)</label>
             <input type="number" id="sponsorPerKm" min="0" step="1" placeholder="Fx 5">
           </div>
         </div>
@@ -270,26 +242,27 @@ select option[disabled]{color:#999;}
           <textarea id="sponsorMessage" rows="3" placeholder="Skriv en kort hilsen..."></textarea>
         </div>
 
-        <button class="cta" type="submit">Tilfoej donation</button>
+        <button class="cta" type="submit">Tilføj donation</button>
         <div class="help" id="formStatus"></div>
       </form>
     </div>
 
     <div class="card">
       <h3>Donationsoverblik</h3>
-      <p class="muted">Se et hurtigt estimeret beloeb ud fra deltagerens distance.</p>
+      <p class="muted">Se et estimeret beløb ud fra deltagerens aktuelle distance.</p>
       <div class="spotlight" id="participantSpotlight">
         <div><strong>Deltager:</strong> <span id="spotlightName">-</span></div>
         <div><strong>Distance:</strong> <span id="spotlightDistance">0.0</span> km</div>
         <div><strong>Indsamlet:</strong> <span id="spotlightRaised">0</span> kr</div>
-        <div><strong>Stottere:</strong> <span id="spotlightSupporters">0</span></div>
+        <div><strong>Støttere:</strong> <span id="spotlightSupporters">0</span></div>
       </div>
       <div class="summary" id="donationSummary">
         <div class="line"><span>Valgt deltager</span><strong id="summaryName">-</strong></div>
         <div class="line"><span>Distance (km)</span><strong id="summaryDistance">0.0</strong></div>
-        <div class="line"><span>Engangsbeloeb</span><strong id="summaryFlat">0</strong></div>
-        <div class="line"><span>Beloeb pr. km</span><strong id="summaryPerKm">0</strong></div>
-        <div class="line"><span>Estimeret donation</span><strong id="summaryTotal">0</strong></div>
+        <div class="line"><span>Engangsbeløb</span><strong id="summaryFlat">0</strong></div>
+        <div class="line"><span>Beløb pr. km</span><strong id="summaryPerKm">0</strong></div>
+        <div class="line"><span>Estimat (nu)</span><strong id="summaryTotal">0</strong></div>
+        <div class="help">Estimatet beregnes ud fra deltagerens nuværende distance.</div>
       </div>
 
       <h3 style="margin-top:24px;">Seneste donationer</h3>
@@ -310,7 +283,6 @@ async function fetchParticipants(){
   const res = await fetch(`${API_URL}?sheet=Deltagere`);
   participants = await res.json();
   renderParticipantOptions();
-  renderQuickPicks();
 }
 
 async function fetchDonors(){
@@ -384,22 +356,6 @@ function renderParticipantOptions(){
     });
 }
 
-function renderQuickPicks(){
-  const quick = document.getElementById("quickPicks");
-  quick.innerHTML = "";
-  const topByDistance = participants
-    .slice()
-    .sort((a,b)=>b.Distance-a.Distance)
-    .slice(0,5);
-  topByDistance.forEach(p=>{
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = p.Navn;
-    btn.addEventListener("click", ()=>setSelectedRecipient(p.Navn));
-    quick.appendChild(btn);
-  });
-}
-
 function setSelectedRecipient(name){
   const searchInput = document.getElementById("participantSearch");
   searchInput.value = "";
@@ -432,33 +388,6 @@ function updateSpotlight(name, distance){
   spotlightRaised.textContent = raised.toFixed(0);
   spotlightSupporters.textContent = supporters;
 }
-
-function setDonationType(type){
-  const flatInput = document.getElementById("sponsorFlat");
-  const perKmInput = document.getElementById("sponsorPerKm");
-
-  if(type === "flat"){
-    flatInput.removeAttribute("disabled");
-    perKmInput.value = "";
-    perKmInput.setAttribute("disabled", "disabled");
-  } else if(type === "perkm"){
-    perKmInput.removeAttribute("disabled");
-    flatInput.value = "";
-    flatInput.setAttribute("disabled", "disabled");
-  } else {
-    flatInput.removeAttribute("disabled");
-    perKmInput.removeAttribute("disabled");
-  }
-  updateSummary();
-}
-
-document.getElementById("donationType").addEventListener("click", (event)=>{
-  const btn = event.target.closest(".tag");
-  if(!btn) return;
-  document.querySelectorAll(".tag").forEach(t=>t.classList.remove("active"));
-  btn.classList.add("active");
-  setDonationType(btn.dataset.type);
-});
 
 document.getElementById("participantSearch").addEventListener("input", e=>{
   searchTerm = e.target.value;
@@ -512,7 +441,6 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   document.getElementById("formStatus").textContent = "Donation registreret. Tak for dit bidrag!";
   document.getElementById("formStatus").style.color = "#0e7c86";
   document.getElementById("sponsorForm").reset();
-  setDonationType("both");
   updateSummary();
   fetchDonors();
 });

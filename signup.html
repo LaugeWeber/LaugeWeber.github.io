@@ -113,7 +113,7 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
     <div class="nav-links">
       <a href="index.html">Oversigt</a>
       <a class="primary" href="signup.html">Tilmeld deltager</a>
-      <a href="donate.html">Doner beloeb</a>
+      <a href="donate.html">Donér beløb</a>
     </div>
   </div>
 </header>
@@ -122,12 +122,12 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
   <section class="hero">
     <div class="card">
       <h1>Tilmeld deltager</h1>
-      <p>Gor det nemt for nye deltagere at komme med. Navnet bliver brugt pa leaderboardet og i donationsflowet.</p>
+      <p>Gør det nemt for nye deltagere at komme med. Navnet bruges i leaderboardet og donationsflowet.</p>
       <form id="participantSignupForm" novalidate>
         <div>
           <label for="participantNameSignup">Deltagerens navn</label>
           <input type="text" id="participantNameSignup" placeholder="Fx Mia Jensen" required>
-          <div class="help" id="nameHint">Brug fuldt navn, sa det er let at finde.</div>
+          <div class="help" id="nameHint">Brug fuldt navn, så det er let at finde.</div>
           <div class="status" id="formStatus"></div>
         </div>
         <button class="btn primary" type="submit">Tilmeld deltager</button>
@@ -135,10 +135,10 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
     </div>
     <div class="card">
       <h2>Godt at vide</h2>
-      <p>Hold oversigten ren ved at undga dubletter. Vi tjekker automatisk, om navnet allerede findes.</p>
+      <p>Vi tjekker automatisk for dubletter, så du undgår at oprette samme deltager to gange.</p>
       <ul class="tips">
         <li><strong>Aktive deltagere:</strong> <span id="participantCount">0</span></li>
-        <li><strong>Tip:</strong> Brug samme stavning som pa donationssiden.</li>
+        <li><strong>Tip:</strong> Brug samme stavning som på donationssiden.</li>
         <li><strong>Efter tilmelding:</strong> Deltageren kan modtage donationer med det samme.</li>
       </ul>
     </div>
@@ -182,11 +182,11 @@ document.getElementById("participantSignupForm").addEventListener("submit", asyn
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();
   if(!name){
-    setStatus("Udfyld navn for at fortsaette.", "#b00020");
+    setStatus("Udfyld navn for at fortsætte.", "#b00020");
     return;
   }
   if(nameExists(name)){
-    setStatus("Navnet findes allerede. Vaelg et andet.", "#b00020");
+    setStatus("Navnet findes allerede. Vælg et andet.", "#b00020");
     return;
   }
 
@@ -195,7 +195,7 @@ document.getElementById("participantSignupForm").addEventListener("submit", asyn
     body:JSON.stringify({Navn:name, Distance:0})
   });
 
-  setStatus("Deltager tilfoejet!", "#0e7c86");
+  setStatus("Deltager tilføjet!", "#0e7c86");
   document.getElementById("participantNameSignup").value="";
   fetchParticipants();
 });
