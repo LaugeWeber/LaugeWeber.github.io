@@ -5,35 +5,202 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tilføj deltager – Walkathon</title>
 <style>
-body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:20px;}
-header{display:flex;justify-content:flex-start;margin-bottom:20px;}
-header a{margin-right:10px;color:#0069d9;text-decoration:none;}
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap");
+:root{
+  --bg:#f3f6fb;
+  --panel:#ffffff;
+  --ink:#132033;
+  --muted:#53627b;
+  --accent:#0e7c86;
+  --ring:rgba(14,124,134,.2);
+  --shadow:0 24px 60px rgba(19,32,51,.12);
+  --radius:18px;
+  --max:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:"Source Sans 3","Segoe UI",sans-serif;
+  background:
+    radial-gradient(1200px 700px at 5% -10%, #d9f3f2 0, transparent 60%),
+    radial-gradient(1000px 600px at 110% 0%, #fff0cc 0, transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+}
+h1,h2,h3{font-family:"Playfair Display","Georgia",serif;letter-spacing:.01em;}
+a{text-decoration:none;color:inherit;}
+
+header{
+  position:sticky;
+  top:0;
+  background:rgba(243,246,251,.85);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(19,32,51,.08);
+  z-index:10;
+}
+.nav{
+  max-width:var(--max);
+  margin:0 auto;
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.brand{font-weight:700;letter-spacing:.02em;}
+.nav-links{display:flex;gap:12px;flex-wrap:wrap;}
+.nav-links a{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(14,124,134,.08);
+  color:var(--accent);
+  font-weight:600;
+}
+.nav-links a.primary{background:var(--accent);color:#fff;}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
+.hero{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:28px;
+  align-items:stretch;
+}
+.card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:var(--shadow);
+}
+.hero p{color:var(--muted);line-height:1.7;margin-top:10px;}
+
+form{display:grid;gap:16px;margin-top:18px;}
+label{font-weight:600;}
+input{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #d9e1ee;
+  font-size:1rem;
+  font-family:inherit;
+  background:#fff;
+}
+input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
+.btn{
+  border:none;
+  border-radius:999px;
+  padding:12px 18px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+}
+.btn.primary{background:var(--accent);color:#fff;}
+.help{font-size:.9rem;color:var(--muted);}
+.status{margin-top:8px;font-weight:600;}
+
+.tips{display:grid;gap:10px;list-style:none;margin-top:16px;}
+.tips li{background:#f7f9fd;border:1px solid #e4ebf5;padding:10px 12px;border-radius:12px;}
+
+@media (max-width: 900px){
+  .hero{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html">← Tilbage til forsiden</a>
+  <div class="nav">
+    <div class="brand">4. Maj Walkathon</div>
+    <div class="nav-links">
+      <a href="index.html">Oversigt</a>
+      <a class="primary" href="signup.html">Tilmeld deltager</a>
+      <a href="donate.html">Doner beloeb</a>
+    </div>
+  </div>
 </header>
 
-<h1>Tilmeld deltager</h1>
-<form id="participantSignupForm">
-  <input type="text" id="participantNameSignup" placeholder="Indtast deltagerens navn" required>
-  <button type="submit">Tilmeld</button>
-</form>
+<main class="wrap">
+  <section class="hero">
+    <div class="card">
+      <h1>Tilmeld deltager</h1>
+      <p>Gor det nemt for nye deltagere at komme med. Navnet bliver brugt pa leaderboardet og i donationsflowet.</p>
+      <form id="participantSignupForm" novalidate>
+        <div>
+          <label for="participantNameSignup">Deltagerens navn</label>
+          <input type="text" id="participantNameSignup" placeholder="Fx Mia Jensen" required>
+          <div class="help" id="nameHint">Brug fuldt navn, sa det er let at finde.</div>
+          <div class="status" id="formStatus"></div>
+        </div>
+        <button class="btn primary" type="submit">Tilmeld deltager</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Godt at vide</h2>
+      <p>Hold oversigten ren ved at undga dubletter. Vi tjekker automatisk, om navnet allerede findes.</p>
+      <ul class="tips">
+        <li><strong>Aktive deltagere:</strong> <span id="participantCount">0</span></li>
+        <li><strong>Tip:</strong> Brug samme stavning som pa donationssiden.</li>
+        <li><strong>Efter tilmelding:</strong> Deltageren kan modtage donationer med det samme.</li>
+      </ul>
+    </div>
+  </section>
+</main>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+let participants = [];
+
+async function fetchParticipants(){
+  const res = await fetch(`${API_URL}?sheet=Deltagere`);
+  participants = await res.json();
+  document.getElementById("participantCount").textContent = participants.length;
+}
+
+function setStatus(message, color){
+  const status = document.getElementById("formStatus");
+  status.textContent = message;
+  status.style.color = color;
+}
+
+function nameExists(name){
+  return participants.some(p=>p.Navn.toLowerCase() === name.toLowerCase());
+}
+
+document.getElementById("participantNameSignup").addEventListener("input", e=>{
+  const value = e.target.value.trim();
+  if(!value){
+    setStatus("", "");
+    return;
+  }
+  if(nameExists(value)){
+    setStatus("Navnet findes allerede. Overvej en anden stavning.", "#b00020");
+  } else {
+    setStatus("Navnet er ledigt.", "#0e7c86");
+  }
+});
 
 document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();
-  if(name){
-    await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:name, Distance:0})});
-    alert("Deltager tilføjet!");
-    document.getElementById("participantNameSignup").value="";
+  if(!name){
+    setStatus("Udfyld navn for at fortsaette.", "#b00020");
+    return;
   }
+  if(nameExists(name)){
+    setStatus("Navnet findes allerede. Vaelg et andet.", "#b00020");
+    return;
+  }
+
+  await fetch(`${API_URL}?sheet=Deltagere`, {
+    method:"POST",
+    body:JSON.stringify({Navn:name, Distance:0})
+  });
+
+  setStatus("Deltager tilfoejet!", "#0e7c86");
+  document.getElementById("participantNameSignup").value="";
+  fetchParticipants();
 });
+
+fetchParticipants();
 </script>
 </body>
 </html>

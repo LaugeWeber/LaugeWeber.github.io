@@ -5,109 +5,326 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4. Maj Walkathon</title>
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap");
+:root{
+  --bg:#f3f6fb;
+  --panel:#ffffff;
+  --ink:#132033;
+  --muted:#53627b;
+  --accent:#0e7c86;
+  --accent-2:#f2b705;
+  --ring:rgba(14,124,134,.2);
+  --shadow:0 24px 60px rgba(19,32,51,.12);
+  --radius:18px;
+  --max:1180px;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f7f9fc;color:#333;}
-a{text-decoration:none;color:#0069d9;}
-header{position:fixed;top:0;left:0;width:100%;background:#0069d9;color:white;height:60px;display:flex;align-items:center;padding:0 15px;z-index:1000;}
-header h1{flex:1;text-align:center;font-size:1.5em;}
-header .burgerNav{display:flex;gap:10px;}
-.burgerNav a{background:white;color:#0069d9;padding:8px 12px;border-radius:6px;transition:0.3s;}
-.burgerNav a:hover{background:#f0f0f0;}
+body{
+  font-family:"Source Sans 3","Segoe UI",sans-serif;
+  background:
+    radial-gradient(1200px 700px at 5% -10%, #d9f3f2 0, transparent 60%),
+    radial-gradient(1000px 600px at 110% 0%, #fff0cc 0, transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+}
+a{text-decoration:none;color:inherit;}
+h1,h2,h3{font-family:"Playfair Display","Georgia",serif;letter-spacing:.01em;}
+img{max-width:100%;display:block;}
 
-/* HERO */
-.hero{padding:100px 20px 40px;text-align:center;background:linear-gradient(90deg,#0069d9,#0053a3);color:white;}
-.hero h1{font-size:2.5em;margin-bottom:20px;}
-.hero .totals{display:flex;justify-content:center;gap:40px;font-size:1.2em;margin-top:20px;}
-@media(max-width:768px){.hero .totals{flex-direction:column;gap:10px;}}
+header{
+  position:sticky;
+  top:0;
+  background:rgba(243,246,251,.85);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(19,32,51,.08);
+  z-index:10;
+}
+.nav{
+  max-width:var(--max);
+  margin:0 auto;
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.brand{font-weight:700;letter-spacing:.02em;}
+.nav-links{display:flex;gap:12px;flex-wrap:wrap;}
+.nav-links a{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(14,124,134,.08);
+  color:var(--accent);
+  font-weight:600;
+}
+.nav-links a.primary{background:var(--accent);color:#fff;}
 
-/* CONTAINER */
-.container{max-width:1200px;margin:0 auto;padding:20px;}
+.wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
+.hero{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:28px;
+  align-items:stretch;
+  margin-bottom:28px;
+}
+.hero-card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:32px;
+  box-shadow:var(--shadow);
+}
+.hero h1{font-size:2.8rem;margin-bottom:12px;}
+.hero p{color:var(--muted);line-height:1.7;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
+.btn{
+  border:none;
+  border-radius:999px;
+  padding:12px 18px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+}
+.btn.primary{background:var(--accent);color:#fff;}
+.btn.ghost{background:rgba(14,124,134,.12);color:var(--accent);}
 
-/* LEADERBOARDS */
-.leaderboards{display:flex;gap:20px;flex-wrap:wrap;margin-top:40px;}
-.card{background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);flex:1 1 300px;}
-.card h3{color:#0069d9;margin-bottom:15px;text-align:center;font-size:1.2em;}
+.hero-side{
+  background:linear-gradient(140deg, #0e7c86 0%, #0c5660 100%);
+  color:#fff;
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.hero-side h2{font-size:1.5rem;margin-bottom:12px;}
+.hero-side ul{list-style:none;display:grid;gap:10px;}
+.hero-side li{background:rgba(255,255,255,.12);padding:10px 12px;border-radius:12px;}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:24px;}
+.card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+.stat{display:grid;gap:6px;}
+.stat strong{font-size:1.6rem;}
+.stat span{color:var(--muted);font-weight:600;}
+
+.section{margin-top:36px;}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.section-head p{color:var(--muted);}
+
+.progress-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.progress-bar{height:10px;border-radius:999px;background:#e6edf7;overflow:hidden;margin-top:10px;}
+.progress-bar span{display:block;height:100%;background:var(--accent);width:0%;transition:width .4s ease;}
+
+.leaderboards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.card h3{margin-bottom:12px;}
 .card table{width:100%;border-collapse:collapse;}
-.card table tr:nth-child(odd){background:#f0f4f8;}
-.card table tr:hover{background:#e0ebf8;}
-.card table td, .card table th{padding:8px;text-align:center;}
-.card table th{background:#0069d9;color:white;border-radius:6px;}
+.card table tr:nth-child(odd){background:#f2f5fb;}
+.card table td, .card table th{padding:8px;text-align:left;}
+.card table th{font-weight:700;color:var(--accent);}
 
-/* PARTICIPANT LIST */
-.participantList{margin-top:40px;background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-.participantList table{width:100%;border-collapse:collapse;}
-.participantList th, .participantList td{border:1px solid #ddd;padding:8px;text-align:left;}
-.participantList thead{background:#f0f4f8;}
-.participantList td.editable:hover{background:#eef; cursor:pointer;}
+.participants-grid{display:grid;grid-template-columns:1.4fr .6fr;gap:20px;}
+.controls{display:flex;gap:12px;flex-wrap:wrap;}
+input, select{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #d7dfeb;
+  font-family:inherit;
+  min-width:180px;
+}
+input:focus, select:focus{outline:2px solid var(--ring);border-color:var(--accent);}
+.participant-table{width:100%;border-collapse:collapse;}
+.participant-table th,.participant-table td{padding:10px;border-bottom:1px solid #ecf1f7;text-align:left;}
+.participant-table th{color:var(--muted);font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;}
+.participant-table td.editable:hover{background:#f0f5ff;cursor:pointer;}
 
-/* FOOTER */
-footer{text-align:center;padding:20px;margin-top:40px;background:#eee;}
+.donation-feed{display:grid;gap:12px;}
+.donation-item{padding:12px;border-radius:12px;background:#f7f9fd;border:1px solid #e4ebf5;}
 
-/* RESPONSIVE */
-@media(max-width:768px){.leaderboards{flex-direction:column;}}
+.admin-row{display:flex;justify-content:flex-end;margin-top:12px;}
+.admin-row button{background:rgba(19,32,51,.06);border:none;border-radius:999px;padding:8px 14px;cursor:pointer;}
+
+footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.stagger > *{animation:fadeUp .6s ease both;}
+.stagger > *:nth-child(2){animation-delay:.1s;}
+.stagger > *:nth-child(3){animation-delay:.2s;}
+.stagger > *:nth-child(4){animation-delay:.3s;}
+
+@media (max-width: 980px){
+  .hero{grid-template-columns:1fr;}
+  .grid{grid-template-columns:1fr 1fr;}
+  .leaderboards{grid-template-columns:1fr;}
+  .participants-grid{grid-template-columns:1fr;}
+  .progress-grid{grid-template-columns:1fr;}
+}
+@media (max-width: 680px){
+  .grid{grid-template-columns:1fr;}
+  .hero h1{font-size:2.2rem;}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <nav class="burgerNav">
-    <a href="signup.html">Tilføj deltager</a>
-    <a href="donate.html">Doner beløb</a>
-  </nav>
+  <div class="nav">
+    <div class="brand">4. Maj Walkathon</div>
+    <div class="nav-links">
+      <a href="index.html">Oversigt</a>
+      <a href="signup.html">Tilmeld deltager</a>
+      <a class="primary" href="donate.html">Doner beloeb</a>
+    </div>
+  </div>
 </header>
 
-<div class="hero">
-  <h1>4. Maj Walkathon – Kollegiet</h1>
-  <div class="totals">
-    <div><strong>Total donation:</strong> <span id="totalDonation">0</span> kr</div>
-    <div><strong>Total distance:</strong> <span id="totalDistance">0</span> km</div>
-  </div>
-</div>
+<main class="wrap">
+  <section class="hero">
+    <div class="hero-card">
+      <h1>Walkathon hub</h1>
+      <p>Folg live med i distance, donationer og topindsamlinger. Alt er samlet et sted, sa du kan heppe og handle med det samme.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="donate.html">Doner nu</a>
+        <a class="btn ghost" href="signup.html">Tilmeld deltager</a>
+      </div>
+    </div>
+    <div class="hero-side">
+      <div>
+        <h2>Fede walkathon-features</h2>
+        <ul>
+          <li>Live leaderboard og deltagerliste</li>
+          <li>Donationer beregnes efter distance</li>
+          <li>Hurtigt overblik over seneste bidrag</li>
+        </ul>
+      </div>
+      <div>Tip: del siden med venner og familie for at kickstarte indsamlingen.</div>
+    </div>
+  </section>
 
-<div class="container">
-  <!-- LEADERBOARDS -->
-  <div class="leaderboards">
-    <div class="card">
-      <h3>Top 5 distance (km)</h3>
-      <table id="leaderboardDistance"><tbody></tbody></table>
+  <section class="grid stagger">
+    <div class="card stat">
+      <span>Total donation</span>
+      <strong id="totalDonation">0</strong>
+      <span>kr lige nu</span>
     </div>
-    <div class="card">
-      <h3>Top 5 donatorer (beløb)</h3>
-      <table id="leaderboardTopDonors"><tbody></tbody></table>
+    <div class="card stat">
+      <span>Total distance</span>
+      <strong id="totalDistance">0.0</strong>
+      <span>km gaet</span>
     </div>
-    <div class="card">
-      <h3>Top 5 modtagere (beløb)</h3>
-      <table id="leaderboardTopRecipients"><tbody></tbody></table>
+    <div class="card stat">
+      <span>Aktive deltagere</span>
+      <strong id="totalParticipants">0</strong>
+      <span>tilmeldt</span>
     </div>
-  </div>
+    <div class="card stat">
+      <span>Donorer</span>
+      <strong id="totalDonors">0</strong>
+      <span>unikke bidrag</span>
+    </div>
+  </section>
 
-  <!-- PARTICIPANT LIST -->
-  <div class="participantList">
-    <h3>Tilmeldte deltagere</h3>
-    <table id="participantListTable">
-      <thead><tr><th>Navn</th><th>Distance (km)</th><th>Doneret beløb</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2>Maalsaetninger</h2>
+        <p>Vi arbejder mod klare, motiverende mal for baade distance og indsamling.</p>
+      </div>
+    </div>
+    <div class="progress-grid">
+      <div class="card">
+        <h3>Indsamling</h3>
+        <div class="progress-meta"><span id="donationProgressLabel">0 / 0 kr</span></div>
+        <div class="progress-bar"><span id="donationProgressBar"></span></div>
+      </div>
+      <div class="card">
+        <h3>Distance</h3>
+        <div class="progress-meta"><span id="distanceProgressLabel">0 / 0 km</span></div>
+        <div class="progress-bar"><span id="distanceProgressBar"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2>Leaderboards</h2>
+        <p>Se hvem der er foran lige nu.</p>
+      </div>
+    </div>
+    <div class="leaderboards">
+      <div class="card">
+        <h3>Top 5 distance (km)</h3>
+        <table id="leaderboardDistance"><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h3>Top 5 donorer (beloeb)</h3>
+        <table id="leaderboardTopDonors"><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h3>Top 5 modtagere (beloeb)</h3>
+        <table id="leaderboardTopRecipients"><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2>Deltagere</h2>
+        <p>Filtrer og sortér for at finde den deltager, du vil bakke op om.</p>
+      </div>
+      <div class="controls">
+        <input type="text" id="participantSearch" placeholder="Sog efter navn">
+        <select id="participantSort">
+          <option value="distance">Sortér efter distance</option>
+          <option value="donation">Sortér efter donation</option>
+          <option value="name">Sortér efter navn</option>
+        </select>
+      </div>
+    </div>
+    <div class="participants-grid">
+      <div class="card">
+        <table class="participant-table" id="participantListTable">
+          <thead><tr><th>Navn</th><th>Distance (km)</th><th>Donation (kr)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="admin-row"><button id="adminToggle">Bliv admin</button></div>
+      </div>
+      <div class="card">
+        <h3>Seneste donationer</h3>
+        <div class="donation-feed" id="recentDonations"></div>
+      </div>
+    </div>
+  </section>
+</main>
 
 <footer>© 2026 4. Maj Walkathon – Kollegiet</footer>
 
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+const GOAL_DISTANCE=250;
+const GOAL_DONATION=20000;
 let participants=[];
 let donors=[];
 let isAdmin=false;
+let searchTerm="";
+let sortKey="distance";
 
 /* FETCH DATA */
-async function fetchParticipants(){ 
-  const res=await fetch(`${API_URL}?sheet=Deltagere`); 
-  participants=await res.json(); 
+async function fetchParticipants(){
+  const res=await fetch(`${API_URL}?sheet=Deltagere`);
+  participants=await res.json();
   updateAll();
 }
-async function fetchDonors(){ 
-  const res=await fetch(`${API_URL}?sheet=Donationer`); 
-  donors=await res.json(); 
+async function fetchDonors(){
+  const res=await fetch(`${API_URL}?sheet=Donationer`);
+  donors=await res.json();
   updateAll();
 }
 
@@ -162,32 +379,52 @@ function updateParticipants(){
   const tbody=document.querySelector("#participantListTable tbody");
   tbody.innerHTML="";
 
-  participants.forEach(p=>{
-    const totalDonated = calculateDonationForParticipant(p.Navn, p.Distance);
+  const normalized = searchTerm.trim().toLowerCase();
+  const rows = participants
+    .filter(p=>p.Navn.toLowerCase().includes(normalized))
+    .map(p=>({
+      ...p,
+      donation: calculateDonationForParticipant(p.Navn, p.Distance)
+    }));
 
+  rows.sort((a,b)=>{
+    if(sortKey==="name") return a.Navn.localeCompare(b.Navn);
+    if(sortKey==="donation") return b.donation-a.donation;
+    return b.Distance-a.Distance;
+  });
+
+  rows.forEach(p=>{
     const row=document.createElement("tr");
     row.innerHTML=`
       <td>${p.Navn}</td>
       <td class="editable">${Number(p.Distance).toFixed(1)}</td>
-      <td>${totalDonated.toFixed(0)}</td>
+      <td>${p.donation.toFixed(0)}</td>
     `;
-
     tbody.appendChild(row);
     row.querySelector("td.editable")
-       .addEventListener("click",()=>editDistance(p));
+      .addEventListener("click",()=>editDistance(p));
   });
 }
 
 /* UPDATE TOTALS */
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
-
   const totalDonation = participants.reduce((sum,p)=>{
     return sum + calculateDonationForParticipant(p.Navn, p.Distance);
   },0);
+  const donorsUnique = new Set(donors.map(d=>d.Telefon)).size;
 
   document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
   document.getElementById("totalDonation").textContent = totalDonation.toFixed(0);
+  document.getElementById("totalParticipants").textContent = participants.length;
+  document.getElementById("totalDonors").textContent = donorsUnique;
+
+  const donationProgress = Math.min(100, (totalDonation/GOAL_DONATION)*100 || 0);
+  const distanceProgress = Math.min(100, (totalDistance/GOAL_DISTANCE)*100 || 0);
+  document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
+  document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
+  document.getElementById("donationProgressLabel").textContent = `${totalDonation.toFixed(0)} / ${GOAL_DONATION} kr`;
+  document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${GOAL_DISTANCE} km`;
 }
 
 /* UPDATE LEADERBOARDS */
@@ -248,19 +485,43 @@ function updateLeaderboards(){
   });
 }
 
+function updateRecentDonations(){
+  const list = document.getElementById("recentDonations");
+  list.innerHTML = "";
+  const latest = donors.slice(-5).reverse();
+  if(latest.length === 0){
+    list.innerHTML = '<div class="donation-item">Ingen donationer endnu.</div>';
+    return;
+  }
+  latest.forEach(d=>{
+    const item = document.createElement("div");
+    item.className = "donation-item";
+    const flat = Number(d.FastBeløb || 0);
+    const perKm = Number(d.BeløbPrKm || 0);
+    item.textContent = `${d.Navn} -> ${d.Modtager}: ${flat.toFixed(0)} kr + ${perKm.toFixed(0)} kr/km`;
+    list.appendChild(item);
+  });
+}
+
 /* MASTER UPDATE */
 function updateAll(){
   updateParticipants();
   updateLeaderboards();
   updateTotals();
+  updateRecentDonations();
 }
 
-/* ADMIN BUTTON */
-const adminBtn=document.createElement("button");
-adminBtn.textContent="Bliv admin";
-adminBtn.style.margin="20px";
-adminBtn.onclick=becomeAdmin;
-document.body.appendChild(adminBtn);
+document.getElementById("participantSearch").addEventListener("input", e=>{
+  searchTerm = e.target.value;
+  updateParticipants();
+});
+
+document.getElementById("participantSort").addEventListener("change", e=>{
+  sortKey = e.target.value;
+  updateParticipants();
+});
+
+document.getElementById("adminToggle").addEventListener("click", becomeAdmin);
 
 /* INIT */
 fetchParticipants();

@@ -5,52 +5,476 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Doner – Walkathon</title>
 <style>
-input, select, button {
-  display:block;
-  margin:10px 0;
-  padding:8px;
-  font-size:1em;
-  width:300px;
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap");
+:root{
+  --bg:#f3f6fb;
+  --panel:#ffffff;
+  --ink:#132033;
+  --muted:#53627b;
+  --accent:#0e7c86;
+  --accent-2:#f2b705;
+  --ring:rgba(14,124,134,.2);
+  --shadow:0 24px 60px rgba(19,32,51,.12);
+  --radius:18px;
+  --max:1180px;
 }
-select option[disabled] {
-  color: #999;
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:"Source Sans 3","Segoe UI",sans-serif;
+  background:
+    radial-gradient(1200px 700px at 5% -10%, #d9f3f2 0, transparent 60%),
+    radial-gradient(1000px 600px at 110% 0%, #fff0cc 0, transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none;}
+h1,h2,h3{font-family:"Playfair Display","Georgia",serif;letter-spacing:.01em;}
+header{
+  position:sticky;
+  top:0;
+  background:rgba(243,246,251,.85);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(19,32,51,.08);
+  z-index:10;
+}
+.nav{
+  max-width:var(--max);
+  margin:0 auto;
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.brand{font-weight:700;letter-spacing:.02em;}
+.nav-links{display:flex;gap:12px;flex-wrap:wrap;}
+.nav-links a{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(14,124,134,.08);
+  color:var(--accent);
+  font-weight:600;
+}
+.nav-links a.primary{background:var(--accent);color:#fff;}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
+.hero{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:28px;
+  align-items:stretch;
+  margin-bottom:28px;
+}
+.hero-card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:32px;
+  box-shadow:var(--shadow);
+}
+.hero h1{font-size:2.6rem;margin-bottom:12px;}
+.hero p{color:var(--muted);line-height:1.7;}
+.impact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+.impact .pill{
+  padding:12px 14px;
+  border-radius:12px;
+  background:rgba(14,124,134,.08);
+  color:var(--accent);
+  font-weight:700;
+  text-align:center;
+}
+.hero-side{
+  background:linear-gradient(140deg, #0e7c86 0%, #0c5660 100%);
+  color:#fff;
+  border-radius:var(--radius);
+  padding:28px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.hero-side h2{font-size:1.5rem;margin-bottom:12px;}
+.hero-side ul{list-style:none;display:grid;gap:10px;}
+.hero-side li{background:rgba(255,255,255,.12);padding:10px 12px;border-radius:12px;}
+
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;}
+.card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+.card h3{margin-bottom:12px;}
+.muted{color:var(--muted);}
+
+form{display:grid;gap:16px;}
+.field{display:grid;gap:8px;}
+label{font-weight:600;}
+input, select, button, textarea{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #d9e1ee;
+  font-size:1rem;
+  font-family:inherit;
+  background:#fff;
+}
+input:focus, select:focus, textarea:focus{
+  outline:2px solid var(--ring);
+  border-color:var(--accent);
+}
+select option[disabled]{color:#999;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.help{font-size:.9rem;color:var(--muted);}
+.donation-type{display:flex;gap:10px;flex-wrap:wrap;}
+.tag{
+  border:1px solid #d9e1ee;
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  background:#fff;
+  font-weight:600;
+}
+.tag.active{
+  background:rgba(14,124,134,.12);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.cta{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  font-weight:700;
+  padding:14px 18px;
+  border-radius:14px;
+  cursor:pointer;
+}
+.cta:hover{filter:brightness(.95);}
+.note{background:#f7f9fd;border-radius:12px;padding:12px;border:1px dashed #d9e1ee;}
+
+.summary{display:grid;gap:10px;}
+.summary .line{display:flex;justify-content:space-between;}
+.summary strong{color:var(--accent);}
+
+.recent-list{display:grid;gap:10px;}
+.recent-item{padding:12px;border-radius:12px;background:#f7f9fd;border:1px solid #e4ebf5;}
+
+.quick-picks{display:flex;gap:8px;flex-wrap:wrap;}
+.quick-picks button{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid #d9e1ee;
+  background:#fff;
+  cursor:pointer;
+  font-weight:600;
+}
+.spotlight{display:grid;gap:10px;background:#f7f9fd;border:1px solid #e4ebf5;padding:12px;border-radius:12px;}
+
+@media (max-width: 900px){
+  .hero{grid-template-columns:1fr;}
+  .grid{grid-template-columns:1fr;}
+  .row{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
-<h1>Doner beløb</h1>
+<header>
+  <div class="nav">
+    <div class="brand">4. Maj Walkathon</div>
+    <div class="nav-links">
+      <a href="index.html">Oversigt</a>
+      <a href="signup.html">Tilmeld deltager</a>
+      <a class="primary" href="donate.html">Doner beloeb</a>
+    </div>
+  </div>
+</header>
 
-<form id="sponsorForm">
-  <input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
-  <input type="email" id="sponsorEmail" placeholder="Email" required>
-  <input type="text" id="sponsorName" placeholder="Dit navn" required>
-  <select id="sponsorRecipient" required>
-    <option value="" disabled selected>Modtager</option>
-  </select>
-  <input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
-  <input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
-  <button type="submit">Tilføj donation</button>
-</form>
+<main class="wrap">
+  <section class="hero">
+    <div class="hero-card">
+      <h1>Doner med mening</h1>
+      <p>Stot din deltager direkte. Vaelg et engangsbeloeb, beloeb pr. km eller kombiner begge for maksimal effekt.</p>
+      <div class="impact">
+        <div class="pill">Hver km taeller</div>
+        <div class="pill">Alle bidrag gaar til formaalet</div>
+      </div>
+    </div>
+    <div class="hero-side">
+      <div>
+        <h2>Fede walkathon-features</h2>
+        <ul>
+          <li>Live overblik pr. deltager</li>
+          <li>Fleksible bidrag: fast + pr. km</li>
+          <li>Klar kvittering via email</li>
+        </ul>
+      </div>
+      <div class="note">Tip: dit beloeb pr. km beregnes automatisk efter deltagerens distance.</div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h3>Donation</h3>
+      <p class="muted">Vaelg en deltager og udfyld dine oplysninger. Din donation registreres med det samme.</p>
+      <form id="sponsorForm" novalidate>
+        <div class="row">
+          <div class="field">
+            <label for="sponsorName">Dit navn</label>
+            <input type="text" id="sponsorName" placeholder="Navn" required>
+          </div>
+          <div class="field">
+            <label for="sponsorPhone">Telefon</label>
+            <input type="tel" id="sponsorPhone" placeholder="8 cifre" required pattern="[0-9]{8}">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sponsorEmail">Email</label>
+          <input type="email" id="sponsorEmail" placeholder="navn@email.dk" required>
+        </div>
+
+        <div class="field">
+          <label for="participantSearch">Vaelg deltager</label>
+          <input type="text" id="participantSearch" placeholder="Sog efter deltager">
+          <select id="sponsorRecipient" required></select>
+          <div class="help" id="recipientHelp">Du kan soge og vaelge blandt alle tilmeldte.</div>
+        </div>
+
+        <div class="field">
+          <label>Populaere deltagere</label>
+          <div class="quick-picks" id="quickPicks"></div>
+        </div>
+
+        <div class="field">
+          <label>Donationstype</label>
+          <div class="donation-type" id="donationType">
+            <button type="button" class="tag active" data-type="both">Fast + pr. km</button>
+            <button type="button" class="tag" data-type="flat">Kun fast</button>
+            <button type="button" class="tag" data-type="perkm">Kun pr. km</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="sponsorFlat">Engangsbeloeb (kr.)</label>
+            <input type="number" id="sponsorFlat" min="0" step="1" placeholder="Fx 200">
+          </div>
+          <div class="field">
+            <label for="sponsorPerKm">Beloeb pr. km (kr.)</label>
+            <input type="number" id="sponsorPerKm" min="0" step="1" placeholder="Fx 5">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sponsorMessage">Besked til deltager (valgfri)</label>
+          <textarea id="sponsorMessage" rows="3" placeholder="Skriv en kort hilsen..."></textarea>
+        </div>
+
+        <button class="cta" type="submit">Tilfoej donation</button>
+        <div class="help" id="formStatus"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Donationsoverblik</h3>
+      <p class="muted">Se et hurtigt estimeret beloeb ud fra deltagerens distance.</p>
+      <div class="spotlight" id="participantSpotlight">
+        <div><strong>Deltager:</strong> <span id="spotlightName">-</span></div>
+        <div><strong>Distance:</strong> <span id="spotlightDistance">0.0</span> km</div>
+        <div><strong>Indsamlet:</strong> <span id="spotlightRaised">0</span> kr</div>
+        <div><strong>Stottere:</strong> <span id="spotlightSupporters">0</span></div>
+      </div>
+      <div class="summary" id="donationSummary">
+        <div class="line"><span>Valgt deltager</span><strong id="summaryName">-</strong></div>
+        <div class="line"><span>Distance (km)</span><strong id="summaryDistance">0.0</strong></div>
+        <div class="line"><span>Engangsbeloeb</span><strong id="summaryFlat">0</strong></div>
+        <div class="line"><span>Beloeb pr. km</span><strong id="summaryPerKm">0</strong></div>
+        <div class="line"><span>Estimeret donation</span><strong id="summaryTotal">0</strong></div>
+      </div>
+
+      <h3 style="margin-top:24px;">Seneste donationer</h3>
+      <div class="recent-list" id="recentDonations"></div>
+    </div>
+  </section>
+</main>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
 let participants = [];
+let donors = [];
+let currentRecipient = null;
+let searchTerm = "";
 
 // Hent deltagere og fyld dropdown
 async function fetchParticipants(){
   const res = await fetch(`${API_URL}?sheet=Deltagere`);
   participants = await res.json();
+  renderParticipantOptions();
+  renderQuickPicks();
+}
 
-  const sel = document.getElementById("sponsorRecipient");
-  sel.innerHTML = '<option value="" disabled selected>Modtager</option>'; // placeholder
-  participants.forEach(p=>{
-    const opt = document.createElement("option");
-    opt.value = p.Navn;       // Modtager hedder Navn i sheets
-    opt.textContent = p.Navn;
-    sel.appendChild(opt);
+async function fetchDonors(){
+  const res = await fetch(`${API_URL}?sheet=Donationer`);
+  donors = await res.json();
+  updateRecentDonations();
+  updateSummary();
+}
+
+function getRecipientDistance(name){
+  return Number(participants.find(p=>p.Navn===name)?.Distance || 0);
+}
+
+function calculateDonationForParticipant(name, distance){
+  return donors
+    .filter(d=>d.Modtager===name)
+    .reduce((sum,d)=>{
+      return sum
+        + Number(d.FastBeløb||0)
+        + Number(d.BeløbPrKm||0)*distance;
+    },0);
+}
+
+function updateSummary(){
+  const name = document.getElementById("sponsorRecipient").value || "-";
+  const distance = name === "-" ? 0 : getRecipientDistance(name);
+  const flat = Number(document.getElementById("sponsorFlat").value || 0);
+  const perKm = Number(document.getElementById("sponsorPerKm").value || 0);
+  const total = flat + perKm * distance;
+
+  document.getElementById("summaryName").textContent = name;
+  document.getElementById("summaryDistance").textContent = distance.toFixed(1);
+  document.getElementById("summaryFlat").textContent = flat.toFixed(0);
+  document.getElementById("summaryPerKm").textContent = perKm.toFixed(0);
+  document.getElementById("summaryTotal").textContent = total.toFixed(0);
+
+  updateSpotlight(name, distance);
+}
+
+function updateRecentDonations(){
+  const list = document.getElementById("recentDonations");
+  list.innerHTML = "";
+  const latest = donors.slice(-5).reverse();
+  if(latest.length === 0){
+    list.innerHTML = '<div class="recent-item">Ingen donationer endnu.</div>';
+    return;
+  }
+  latest.forEach(d=>{
+    const item = document.createElement("div");
+    item.className = "recent-item";
+    const flat = Number(d.FastBeløb || 0);
+    const perKm = Number(d.BeløbPrKm || 0);
+    item.textContent = `${d.Navn} -> ${d.Modtager}: ${flat.toFixed(0)} kr + ${perKm.toFixed(0)} kr/km`;
+    list.appendChild(item);
   });
 }
-fetchParticipants();
+
+function renderParticipantOptions(){
+  const sel = document.getElementById("sponsorRecipient");
+  sel.innerHTML = '<option value="" disabled selected>Vaelg deltager</option>';
+  const normalized = searchTerm.trim().toLowerCase();
+  participants
+    .slice()
+    .filter(p=>p.Navn.toLowerCase().includes(normalized))
+    .sort((a,b)=>a.Navn.localeCompare(b.Navn))
+    .forEach(p=>{
+      const opt = document.createElement("option");
+      opt.value = p.Navn;
+      opt.textContent = p.Navn;
+      sel.appendChild(opt);
+    });
+}
+
+function renderQuickPicks(){
+  const quick = document.getElementById("quickPicks");
+  quick.innerHTML = "";
+  const topByDistance = participants
+    .slice()
+    .sort((a,b)=>b.Distance-a.Distance)
+    .slice(0,5);
+  topByDistance.forEach(p=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = p.Navn;
+    btn.addEventListener("click", ()=>setSelectedRecipient(p.Navn));
+    quick.appendChild(btn);
+  });
+}
+
+function setSelectedRecipient(name){
+  const searchInput = document.getElementById("participantSearch");
+  searchInput.value = "";
+  searchTerm = "";
+  renderParticipantOptions();
+  const sel = document.getElementById("sponsorRecipient");
+  sel.value = name;
+  currentRecipient = name;
+  updateSummary();
+}
+
+function updateSpotlight(name, distance){
+  const spotlightName = document.getElementById("spotlightName");
+  const spotlightDistance = document.getElementById("spotlightDistance");
+  const spotlightRaised = document.getElementById("spotlightRaised");
+  const spotlightSupporters = document.getElementById("spotlightSupporters");
+
+  if(name === "-"){
+    spotlightName.textContent = "-";
+    spotlightDistance.textContent = "0.0";
+    spotlightRaised.textContent = "0";
+    spotlightSupporters.textContent = "0";
+    return;
+  }
+
+  const raised = calculateDonationForParticipant(name, distance);
+  const supporters = donors.filter(d=>d.Modtager===name).length;
+  spotlightName.textContent = name;
+  spotlightDistance.textContent = distance.toFixed(1);
+  spotlightRaised.textContent = raised.toFixed(0);
+  spotlightSupporters.textContent = supporters;
+}
+
+function setDonationType(type){
+  const flatInput = document.getElementById("sponsorFlat");
+  const perKmInput = document.getElementById("sponsorPerKm");
+
+  if(type === "flat"){
+    flatInput.removeAttribute("disabled");
+    perKmInput.value = "";
+    perKmInput.setAttribute("disabled", "disabled");
+  } else if(type === "perkm"){
+    perKmInput.removeAttribute("disabled");
+    flatInput.value = "";
+    flatInput.setAttribute("disabled", "disabled");
+  } else {
+    flatInput.removeAttribute("disabled");
+    perKmInput.removeAttribute("disabled");
+  }
+  updateSummary();
+}
+
+document.getElementById("donationType").addEventListener("click", (event)=>{
+  const btn = event.target.closest(".tag");
+  if(!btn) return;
+  document.querySelectorAll(".tag").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  setDonationType(btn.dataset.type);
+});
+
+document.getElementById("participantSearch").addEventListener("input", e=>{
+  searchTerm = e.target.value;
+  renderParticipantOptions();
+});
+
+document.getElementById("sponsorRecipient").addEventListener("change", e=>{
+  currentRecipient = e.target.value;
+  updateSummary();
+});
+
+document.getElementById("sponsorFlat").addEventListener("input", updateSummary);
+document.getElementById("sponsorPerKm").addEventListener("input", updateSummary);
+
+fetchParticipants().then(updateSummary);
+fetchDonors();
 
 document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   e.preventDefault();
@@ -61,9 +485,11 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   const recipient = document.getElementById("sponsorRecipient").value;
   const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
   const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
+  const message = document.getElementById("sponsorMessage").value.trim();
 
   if(!phone || !email || !name || !recipient || (flat<=0 && perKm<=0)){
-    alert("Udfyld alle felter korrekt");
+    document.getElementById("formStatus").textContent = "Udfyld alle felter korrekt.";
+    document.getElementById("formStatus").style.color = "#b00020";
     return;
   }
 
@@ -74,7 +500,8 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
     Navn: name,
     Modtager: recipient,
     FastBeløb: flat,
-    BeløbPrKm: perKm
+    BeløbPrKm: perKm,
+    Besked: message
   };
 
   await fetch(`${API_URL}?sheet=Donationer`, {
@@ -82,8 +509,12 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
     body:JSON.stringify(donationData)
   });
 
-  alert("Donation registreret!");
+  document.getElementById("formStatus").textContent = "Donation registreret. Tak for dit bidrag!";
+  document.getElementById("formStatus").style.color = "#0e7c86";
   document.getElementById("sponsorForm").reset();
+  setDonationType("both");
+  updateSummary();
+  fetchDonors();
 });
 </script>
 </body>
