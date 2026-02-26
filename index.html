@@ -1,185 +1,231 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <title>4. Maj Walkathon – Kollegiet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f8f9fa;
-            color: #333;
-        }
-        header {
-            background: #0069d9;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        h1, h2 {
-            margin: 0.5em 0;
-        }
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        form {
-            margin-bottom: 30px;
-        }
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-            margin: 5px 0;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            background: #0069d9;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0053a3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        footer {
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-            background: #eee;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>4. Maj Walkathon – Kollegiet</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f6fa; color:#333; }
+header { background:#0069d9; color:white; text-align:center; padding:20px; }
+h1,h2,h3 { margin:0.5em 0; }
+.container { max-width:900px; margin:30px auto; padding:20px; background:white; box-shadow:0 0 15px rgba(0,0,0,0.1); }
+form { margin-bottom:30px; }
+input, select, button { padding:10px; font-size:16px; margin:5px 0; width:100%; box-sizing:border-box; }
+button { background:#0069d9; color:white; border:none; cursor:pointer; }
+button:hover { background:#0053a3; }
+table { width:100%; border-collapse:collapse; margin-top:15px; }
+table, th, td { border:1px solid #ccc; }
+th, td { padding:8px; text-align:left; }
+footer { text-align:center; padding:15px; margin-top:40px; background:#eee; }
+.section { margin-top:40px; }
+.admin-section { background:#e3f2fd; padding:15px; }
+.error { color:red; }
+</style>
 </head>
 <body>
-    <header>
-        <h1>4. Maj Walkathon – Kollegiet</h1>
-        <p>Gå for fællesskab, gå for donationer!</p>
-    </header>
 
-    <div class="container">
-        <!-- DISTANCE FORM -->
-        <h2>Indtast distance</h2>
-        <form id="distanceForm">
-            <input type="text" id="participantName" placeholder="Deltagerens navn" required>
-            <input type="number" id="distanceWalked" placeholder="Distance gået (km)" required>
-            <button type="submit">Tilføj distance</button>
-        </form>
+<header>
+<h1>4. Maj Walkathon – Kollegiet</h1>
+<p>Gå for fællesskab, gå for donationer!</p>
+</header>
 
-        <!-- DONATION FORM -->
-        <h2>Indtast donation</h2>
-        <form id="donationForm">
-            <input type="text" id="donorName" placeholder="Donors navn" required>
-            <input type="number" id="donationAmount" placeholder="Doneret beløb (kr.)" required>
-            <button type="submit">Tilføj donation</button>
-        </form>
+<div class="container">
 
-        <!-- OUTPUT -->
-        <h2>Resultater</h2>
+<!-- DELTAGER TILMELDING -->
+<div class="section">
+<h2>Tilmelding af deltagere</h2>
+<form id="participantSignupForm">
+<input type="text" id="participantNameSignup" placeholder="Indtast dit navn" required>
+<button type="submit">Tilmeld</button>
+</form>
+<h3>Tilmeldte deltagere</h3>
+<table id="participantListTable">
+<thead><tr><th>Navn</th><th>Distance (km)</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
 
-        <div>
-            <strong>Total distance gået:</strong> <span id="totalDistance">0</span> km<br>
-            <strong>Total donation:</strong> <span id="totalDonations">0</span> kr.
-        </div>
+<!-- ADMIN SEKTION -->
+<div class="section admin-section">
+<h2>Admin: Opdater distance</h2>
+<form id="adminLoginForm">
+<input type="password" id="adminPassword" placeholder="Admin password" required>
+<button type="submit">Log ind</button>
+<div class="error" id="adminLoginError"></div>
+</form>
 
-        <h3>Deltagere</h3>
-        <table id="participantsTable">
-            <thead>
-                <tr><th>Navn</th><th>Distance (km)</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+<div id="adminControls" style="display:none;">
+<select id="participantSelect"></select>
+<input type="number" id="participantDistance" placeholder="Distance gået (km)" required>
+<button id="updateDistanceBtn">Opdater distance</button>
+</div>
+</div>
 
-        <h3>Donorer</h3>
-        <table id="donorsTable">
-            <thead>
-                <tr><th>Navn</th><th>Beløb (kr.)</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+<!-- SPONSOR SEKTION -->
+<div class="section">
+<h2>Sponsorindberetning</h2>
+<form id="sponsorForm">
+<input type="text" id="sponsorName" placeholder="Dit navn (sponsor)" required>
+<input type="tel" id="sponsorPhone" placeholder="Telefonnummer (obligatorisk)" required pattern="[0-9]{8}">
+<select id="sponsorRecipient" required>
+<option value="">Vælg deltager</option>
+</select>
+<input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
+<input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
+<button type="submit">Tilføj donation</button>
+</form>
+<h3>Donoroversigt</h3>
+<table id="donorsTable">
+<thead><tr><th>Sponsor</th><th>Telefon</th><th>Mål</th><th>Beløb (kr.)</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
 
-    <footer>
-        4. Maj Walkathon – Kollegiet | © 2026
-    </footer>
+<!-- TOTALER -->
+<div class="section">
+<h2>Totals</h2>
+<p><strong>Total distance gået:</strong> <span id="totalDistance">0</span> km</p>
+<p><strong>Total donation:</strong> <span id="totalDonation">0</span> kr</p>
+</div>
 
-    <script>
-        const participants = [];
-        const donors = [];
+</div>
 
-        const distanceForm = document.getElementById("distanceForm");
-        const donationForm = document.getElementById("donationForm");
+<footer>4. Maj Walkathon – Kollegiet | © 2026</footer>
 
-        distanceForm.addEventListener("submit", function(e) {
-            e.preventDefault();
-            const name = document.getElementById("participantName").value.trim();
-            const distance = parseFloat(document.getElementById("distanceWalked").value);
+<script>
+const ADMIN_PASSWORD = "walkathon2026"; // skift til stærkt password
+const API_URL = "DIN_APPS_SCRIPT_WEBAPP_URL_HER"; // sæt din webapp URL
 
-            if (name && distance > 0) {
-                participants.push({ name, distance });
-                renderParticipants();
-                updateTotals();
-            }
+// Data
+let participants = [];
+let donors = [];
 
-            distanceForm.reset();
+// Elements
+const participantListTable = document.querySelector("#participantListTable tbody");
+const participantSelect = document.getElementById("participantSelect");
+const sponsorRecipient = document.getElementById("sponsorRecipient");
+const totalDistanceEl = document.getElementById("totalDistance");
+const totalDonationEl = document.getElementById("totalDonation");
+
+// Fetch eksisterende data fra Google Sheets
+async function fetchParticipants() {
+    const res = await fetch(`${API_URL}?sheet=Deltagere`);
+    participants = await res.json();
+    updateParticipants();
+}
+async function fetchDonors() {
+    const res = await fetch(`${API_URL}?sheet=Donationer`);
+    donors = await res.json();
+    updateDonors();
+}
+
+// Deltager tilmelding
+document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const name = document.getElementById("participantNameSignup").value.trim();
+    if(name){
+        await fetch(`${API_URL}?sheet=Deltagere`, {
+            method:"POST",
+            body:JSON.stringify({Navn:name, Distance:0})
         });
+        fetchParticipants();
+    }
+    e.target.reset();
+});
 
-        donationForm.addEventListener("submit", function(e) {
-            e.preventDefault();
-            const name = document.getElementById("donorName").value.trim();
-            const amount = parseFloat(document.getElementById("donationAmount").value);
+// Admin login
+document.getElementById("adminLoginForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    const pass = document.getElementById("adminPassword").value;
+    if(pass === ADMIN_PASSWORD){
+        document.getElementById("adminControls").style.display="block";
+        document.getElementById("adminLoginError").textContent="";
+        e.target.style.display="none";
+    } else {
+        document.getElementById("adminLoginError").textContent="Forkert password";
+    }
+});
 
-            if (name && amount > 0) {
-                donors.push({ name, amount });
-                renderDonors();
-                updateTotals();
-            }
-
-            donationForm.reset();
+// Admin opdater distance
+document.getElementById("updateDistanceBtn").addEventListener("click", async ()=>{
+    const sel = participantSelect.value;
+    const dist = parseFloat(document.getElementById("participantDistance").value);
+    if(sel && dist>=0){
+        await fetch(`${API_URL}?sheet=Deltagere`, {
+            method:"POST",
+            body:JSON.stringify({Navn:sel, Distance:dist})
         });
+        fetchParticipants();
+        fetchDonors();
+        document.getElementById("participantDistance").value="";
+    }
+});
 
-        function renderParticipants() {
-            const tbody = document.getElementById("participantsTable").querySelector("tbody");
-            tbody.innerHTML = "";
-            participants.forEach(p => {
-                const row = document.createElement("tr");
-                row.innerHTML = `<td>${p.name}</td><td>${p.distance.toFixed(1)}</td>`;
-                tbody.appendChild(row);
-            });
-        }
+// Sponsor form
+document.getElementById("sponsorForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const name = document.getElementById("sponsorName").value.trim();
+    const phone = document.getElementById("sponsorPhone").value.trim();
+    const recipientName = document.getElementById("sponsorRecipient").value;
+    const flat = parseFloat(document.getElementById("sponsorFlat").value) || 0;
+    const perKm = parseFloat(document.getElementById("sponsorPerKm").value) || 0;
 
-        function renderDonors() {
-            const tbody = document.getElementById("donorsTable").querySelector("tbody");
-            tbody.innerHTML = "";
-            donors.forEach(d => {
-                const row = document.createElement("tr");
-                row.innerHTML = `<td>${d.name}</td><td>${d.amount.toFixed(0)}</td>`;
-                tbody.appendChild(row);
-            });
-        }
+    if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){
+        alert("Udfyld alle påkrævede felter korrekt");
+        return;
+    }
 
-        function updateTotals() {
-            const totalDistance = participants.reduce((sum, p) => sum + p.distance, 0);
-            const totalDonations = donors.reduce((sum, d) => sum + d.amount, 0);
+    const recipient = participants.find(p=>p.Navn===recipientName);
+    const amount = flat + (perKm * recipient.Distance);
+    await fetch(`${API_URL}?sheet=Donationer`, {
+        method:"POST",
+        body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})
+    });
+    fetchDonors();
+    updateTotals();
+    e.target.reset();
+});
 
-            document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
-            document.getElementById("totalDonations").textContent = totalDonations.toFixed(0);
-        }
-    </script>
+// Render funktioner
+function updateParticipants(){
+    participantListTable.innerHTML="";
+    participants.forEach(p=>{
+        const row=document.createElement("tr");
+        row.innerHTML=`<td>${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`;
+        participantListTable.appendChild(row);
+    });
+    participantSelect.innerHTML="";
+    sponsorRecipient.innerHTML='<option value="">Vælg deltager</option>';
+    participants.forEach(p=>{
+        const opt1=document.createElement("option"); opt1.value=p.Navn; opt1.textContent=p.Navn;
+        const opt2=document.createElement("option"); opt2.value=p.Navn; opt2.textContent=p.Navn;
+        participantSelect.appendChild(opt1);
+        sponsorRecipient.appendChild(opt2);
+    });
+    updateTotals();
+}
+
+function updateDonors(){
+    const tbody = document.querySelector("#donorsTable tbody");
+    tbody.innerHTML="";
+    donors.forEach(d=>{
+        const row=document.createElement("tr");
+        row.innerHTML=`<td>${d.Sponsor}</td><td>${d.Telefon}</td><td>${d.Mål}</td><td>${d.Beløb.toFixed(0)}</td>`;
+        tbody.appendChild(row);
+    });
+    updateTotals();
+}
+
+function updateTotals(){
+    const totalDistance = participants.reduce((sum,p)=>sum+p.Distance,0);
+    const totalDonation = donors.reduce((sum,d)=>sum+d.Beløb,0);
+    totalDistanceEl.textContent = totalDistance.toFixed(1);
+    totalDonationEl.textContent = totalDonation.toFixed(0);
+}
+
+// Init
+fetchParticipants();
+fetchDonors();
+
+</script>
 </body>
 </html>
