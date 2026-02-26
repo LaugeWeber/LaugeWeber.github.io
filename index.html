@@ -2,187 +2,138 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4. Maj Walkathon</title>
+<title>Walkathon</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f7f9fc;color:#333;}
-a{text-decoration:none;color:#0069d9;}
-header{position:fixed;top:0;left:0;width:100%;background:#0069d9;color:white;height:60px;display:flex;align-items:center;padding:0 15px;z-index:1000;}
-header h1{flex:1;text-align:center;font-size:1.5em;}
-header .burgerNav{display:flex;gap:10px;}
-.burgerNav a{background:white;color:#0069d9;padding:8px 12px;border-radius:6px;transition:0.3s;}
-.burgerNav a:hover{background:#f0f0f0;}
-
-/* HERO */
-.hero{padding:100px 20px 40px;text-align:center;background:linear-gradient(90deg,#0069d9,#0053a3);color:white;}
-.hero h1{font-size:2.5em;margin-bottom:20px;}
-.hero .totals{display:flex;justify-content:center;gap:40px;font-size:1.2em;margin-top:20px;}
-@media(max-width:768px){.hero .totals{flex-direction:column;gap:10px;}}
-
-/* CONTAINER */
-.container{max-width:1200px;margin:0 auto;padding:20px;}
-
-/* LEADERBOARDS */
-.leaderboards{display:flex;gap:20px;flex-wrap:wrap;margin-top:40px;}
-.card{background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);flex:1 1 300px;}
-.card h3{color:#0069d9;margin-bottom:15px;text-align:center;font-size:1.2em;}
-.card table{width:100%;border-collapse:collapse;}
-.card table tr:nth-child(odd){background:#f0f4f8;}
-.card table tr:hover{background:#e0ebf8;}
-.card table td, .card table th{padding:8px;text-align:center;}
-.card table th{background:#0069d9;color:white;border-radius:6px;}
-
-/* PARTICIPANT LIST */
-.participantList{margin-top:40px;background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-.participantList table{width:100%;border-collapse:collapse;}
-.participantList th, .participantList td{border:1px solid #ddd;padding:8px;text-align:left;}
-.participantList thead{background:#f0f4f8;}
-.participantList td.editable:hover{background:#eef; cursor:pointer;}
-
-/* FOOTER */
-footer{text-align:center;padding:20px;margin-top:40px;background:#eee;}
-
-/* RESPONSIVE */
-@media(max-width:768px){.leaderboards{flex-direction:column;}}
+body { font-family: Arial; padding:20px; }
+.topbar { margin-bottom:20px; }
+button { padding:6px 10px; margin-left:5px; }
+.participant {
+  border:1px solid #ccc;
+  padding:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+.total {
+  font-weight:bold;
+  font-size:18px;
+}
+.admin-box {
+  margin-top:40px;
+  padding-top:20px;
+  border-top:2px solid #ddd;
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>4. Maj Walkathon</h1>
-  <nav class="burgerNav">
-    <a href="signup.html">Tilføj deltager</a>
-    <a href="donate.html">Doner beløb</a>
-  </nav>
-</header>
-
-<div class="hero">
-  <h1>4. Maj Walkathon – Kollegiet</h1>
-  <div class="totals">
-    <div><strong>Total donation:</strong> <span id="totalDonation">0</span> kr</div>
-    <div><strong>Total distance:</strong> <span id="totalDistance">0</span> km</div>
-  </div>
+<div class="topbar">
+  <button onclick="location.href='add.html'">Tilføj deltager</button>
+  <button onclick="location.href='donate.html'">Doner beløb</button>
 </div>
 
-<div class="container">
-  <!-- LEADERBOARDS -->
-  <div class="leaderboards">
-    <div class="card">
-      <h3>Top 5 distance (km)</h3>
-      <table id="leaderboardDistance"><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h3>Top 5 donatorer (beløb)</h3>
-      <table id="leaderboardTopDonors"><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h3>Top 5 modtagere (beløb)</h3>
-      <table id="leaderboardTopRecipients"><tbody></tbody></table>
-    </div>
-  </div>
+<div id="participants"></div>
 
-  <!-- PARTICIPANT LIST -->
-  <div class="participantList">
-    <h3>Tilmeldte deltagere</h3>
-    <table id="participantListTable">
-      <thead><tr><th>Navn</th><th>Distance (km)</th><th>Doneret beløb</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="admin-box">
+  <button onclick="becomeAdmin()">Bliv admin</button>
+  <span id="adminStatus"></span>
 </div>
-
-<footer>© 2026 4. Maj Walkathon – Kollegiet</footer>
 
 <script>
-const ADMIN_PASSWORD="walkathon2026";
-const API_URL="https://script.google.com/macros/s/AKfycbzWq3IMM8-Hep50zIOYmFX_s2wy1qsfhMZzP0OMidkg_SjD9P62RhNl6XHxhUMYkQ9XMw/exec";
-let participants=[];
-let donors=[];
-let isAdmin=false;
+const API_URL = "https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
 
-// FETCH DATA
-async function fetchParticipants(){ 
-  const res=await fetch(`${API_URL}?sheet=Deltagere`); 
-  participants=await res.json(); 
-  updateParticipants(); 
-  updateLeaderboards(); 
-  updateTotals(); 
-}
-async function fetchDonors(){ 
-  const res=await fetch(`${API_URL}?sheet=Donationer`); 
-  donors=await res.json(); 
-  updateLeaderboards(); 
-  updateTotals(); 
+let participants = [];
+let donations = [];
+let isAdmin = false;
+
+/* HENT DATA */
+async function loadData(){
+  const p = await fetch(`${API_URL}?sheet=Deltagere`);
+  const d = await fetch(`${API_URL}?sheet=Donationer`);
+  participants = await p.json();
+  donations = await d.json();
+  render();
 }
 
-// ADMIN CLICK TO EDIT DISTANCE
-async function editDistance(participant){
-  if(!isAdmin){
-    const pass = prompt("Indtast admin password:"); 
-    if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } 
-    isAdmin=true;
-  }
-  const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
-  if(!isNaN(newDist) && newDist>=0){
-    await fetch(`${API_URL}?sheet=Deltagere`, {
-      method:"POST",
-      body:JSON.stringify({Navn:participant.Navn, Distance:newDist})
+/* BEREGN TOTAL FOR EN DELTAGER */
+function calculateTotal(name, distance){
+  let total = 0;
+
+  donations
+    .filter(d => d.Modtager === name)
+    .forEach(d => {
+      total += Number(d.FastBeløb || 0);
+      total += Number(d.BeløbPrKm || 0) * distance;
     });
-    fetchParticipants(); 
-    fetchDonors();
+
+  return total;
+}
+
+/* RENDER */
+function render(){
+  const container = document.getElementById("participants");
+  container.innerHTML = "";
+
+  participants.forEach(p => {
+    const total = calculateTotal(p.Navn, p.Distance);
+
+    const div = document.createElement("div");
+    div.className = "participant";
+    div.innerHTML = `
+      <div class="total">${total} kr.</div>
+      <div><strong>${p.Navn}</strong></div>
+      <div class="distance" data-name="${p.Navn}">
+        ${p.Distance} km
+      </div>
+    `;
+
+    if(isAdmin){
+      div.querySelector(".distance").addEventListener("click", () => {
+        changeDistance(p.Navn, p.Distance);
+      });
+    }
+
+    container.appendChild(div);
+  });
+}
+
+/* ADMIN LOGIN */
+function becomeAdmin(){
+  const code = prompt("Indtast admin-kode:");
+  if(code === "123"){
+    isAdmin = true;
+    document.getElementById("adminStatus").innerText = " (Admin aktiv)";
+    render();
+  } else {
+    alert("Forkert kode");
   }
 }
 
-// UPDATE PARTICIPANTS LIST
-function updateParticipants(){
-  const tbody=document.querySelector("#participantListTable tbody");
-  tbody.innerHTML="";
-  participants.forEach(p=>{
-    const totalDonated=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
-    const row=document.createElement("tr");
-    row.innerHTML=`<td>${p.Navn}</td><td class="editable">${p.Distance.toFixed(1)}</td><td>${totalDonated.toFixed(0)}</td>`;
-    tbody.appendChild(row);
-    row.querySelector("td.editable").addEventListener("click",()=>editDistance(p));
-  });
-}
+/* ÆNDRE DISTANCE (PLUS/MINUS) */
+async function changeDistance(name, currentDistance){
+  const input = prompt("Hvor mange kilometer er lige gået? (brug minus hvis nødvendigt)");
+  if(input === null) return;
 
-// UPDATE TOTALS
-function updateTotals(){
-  document.getElementById("totalDistance").textContent=participants.reduce((a,p)=>a+p.Distance,0).toFixed(1);
-  document.getElementById("totalDonation").textContent=donors.reduce((a,d)=>a+d.Beløb,0).toFixed(0);
-}
+  const delta = Number(input);
+  if(isNaN(delta)){
+    alert("Ugyldigt tal");
+    return;
+  }
 
-// UPDATE LEADERBOARDS
-function updateLeaderboards(){
-  // Top distance
-  const tbodyDist=document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
-  [...participants].sort((a,b)=>b.Distance-a.Distance).slice(0,5).forEach((p,i)=>{ 
-    const row=document.createElement("tr");
-    row.innerHTML=`<td>${i+1}. ${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`;
-    tbodyDist.appendChild(row);
+  const newDistance = currentDistance + delta;
+
+  await fetch(`${API_URL}?sheet=Deltagere`,{
+    method:"POST",
+    body:JSON.stringify({
+      Navn:name,
+      Distance:newDistance
+    })
   });
 
-  // Top donatorer (beløb)
-  const donorTotals = {};
-  donors.forEach(d=>{ donorTotals[d.Sponsor]=(donorTotals[d.Sponsor]||0)+d.Beløb; });
-  const topDonors = Object.entries(donorTotals).map(([name,total])=>({Navn:name, Sum:total}))
-                     .sort((a,b)=>b.Sum-a.Sum).slice(0,5);
-  const tbodyTopDonors=document.querySelector("#leaderboardTopDonors tbody"); tbodyTopDonors.innerHTML="";
-  topDonors.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyTopDonors.appendChild(row); });
-
-  // Top modtagere (beløb)
-  const recipientTotals = participants.map(p=>{
-    const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
-    return {Navn:p.Navn, Total:total};
-  }).sort((a,b)=>b.Total-a.Total).slice(0,5);
-  const tbodyTopRecipients=document.querySelector("#leaderboardTopRecipients tbody"); tbodyTopRecipients.innerHTML="";
-  recipientTotals.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyTopRecipients.appendChild(row); });
+  loadData();
 }
 
-// INIT
-fetchParticipants();
-fetchDonors();
+loadData();
 </script>
+
 </body>
 </html>

@@ -2,57 +2,92 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doner – Walkathon</title>
+<title>Doner</title>
 <style>
-body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:20px;}
-header{display:flex;justify-content:flex-start;margin-bottom:20px;}
-header a{margin-right:10px;color:#0069d9;text-decoration:none;}
-form input, form select, form button{display:block;margin:10px 0;padding:8px;width:100%;max-width:300px;}
+body{font-family:sans-serif;padding:20px;}
+input,select,button{display:block;margin:10px 0;padding:8px;width:300px;}
 </style>
 </head>
 <body>
 
-<header>
-  <a href="index.html">← Tilbage til forsiden</a>
-</header>
+<a href="index.html">← Tilbage</a>
+<h1>Doner</h1>
 
-<h1>Doner beløb</h1>
-<form id="sponsorForm">
-  <input type="text" id="sponsorName" placeholder="Dit navn" required>
-  <input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
-  <select id="sponsorRecipient" required><option value="">Vælg deltager</option></select>
-  <input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
-  <input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
-  <button type="submit">Tilføj donation</button>
+<form id="form">
+
+<input type="tel" id="phone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
+<input type="email" id="mail" placeholder="Mail" required>
+<input type="text" id="name" placeholder="Navn" required>
+
+<select id="recipient" required></select>
+
+<input type="number" id="flat" placeholder="Fast beløb">
+<input type="number" id="perkm" placeholder="Beløb pr km">
+
+<button type="submit">Doner</button>
+
 </form>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
-let participants = [];
+const API_URL="DIN_WEBAPP_URL_HER";
 
-async function fetchParticipants(){
-  const res = await fetch(`${API_URL}?sheet=Deltagere`);
-  participants = await res.json();
-  const sel = document.getElementById("sponsorRecipient");
-  sel.innerHTML = '<option value="">Vælg deltager</option>';
-  participants.forEach(p=>{ const opt=document.createElement("option"); opt.value=p.Navn; opt.textContent=p.Navn; sel.appendChild(opt); });
+let participants=[];
+let donors=[];
+
+async function loadAll(){
+  const p = await fetch(`${API_URL}?sheet=Deltagere`);
+  const d = await fetch(`${API_URL}?sheet=Donationer`);
+
+  participants = await p.json();
+  donors = await d.json();
+
+  const sel=document.getElementById("recipient");
+  sel.innerHTML="<option value=''>Vælg modtager</option>";
+  participants.forEach(p=>{
+    sel.innerHTML+=`<option>${p.Navn}</option>`;
+  });
 }
-fetchParticipants();
 
-document.getElementById("sponsorForm").addEventListener("submit", async e=>{
+loadAll();
+
+/* Autofill ved eksisterende telefon */
+document.getElementById("phone").addEventListener("blur",()=>{
+  const phone = phoneInput.value;
+  const match = donors.find(d=>d.Telefon===phone);
+
+  if(match){
+    mail.value = match.Mail;
+    name.value = match.Navn;
+  }
+});
+
+const phoneInput=document.getElementById("phone");
+const mail=document.getElementById("mail");
+const name=document.getElementById("name");
+const recipient=document.getElementById("recipient");
+const flat=document.getElementById("flat");
+const perkm=document.getElementById("perkm");
+
+document.getElementById("form").addEventListener("submit",async e=>{
   e.preventDefault();
-  const name = document.getElementById("sponsorName").value.trim();
-  const phone = document.getElementById("sponsorPhone").value.trim();
-  const recipientName = document.getElementById("sponsorRecipient").value;
-  const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
-  const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
-  if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){ alert("Udfyld alle felter korrekt"); return; }
-  const recipient = participants.find(p=>p.Navn===recipientName);
-  const amount = flat + (perKm * recipient.Distance);
-  await fetch(`${API_URL}?sheet=Donationer`, {method:"POST", body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})});
-  alert("Donation registreret!");
+
+  await fetch(`${API_URL}?sheet=Donationer`,{
+    method:"POST",
+    body:JSON.stringify({
+      Telefon:phoneInput.value,
+      Mail:mail.value,
+      Navn:name.value,
+      Modtager:recipient.value,
+      FastBeløb:Number(flat.value||0),
+      BeløbPrKm:Number(perkm.value||0)
+    })
+  });
+
+  alert("Donation registreret");
+  form.reset();
+  loadAll();
 });
 </script>
+
 </body>
 </html>
