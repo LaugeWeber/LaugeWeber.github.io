@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tilføj deltager – Walkathon</title>
+</head>
+<body>
+<h1>Tilmeld deltager</h1>
+<form id="participantSignupForm">
+<input type="text" id="participantNameSignup" placeholder="Indtast deltagerens navn" required>
+<button type="submit">Tilmeld</button>
+</form>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
+document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const name = document.getElementById("participantNameSignup").value.trim();
+  if(name){
+    await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:name, Distance:0})});
+    alert("Deltager tilføjet!");
+    document.getElementById("participantNameSignup").value="";
+  }
+});
+</script>
+</body>
+</html>

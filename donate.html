@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doner – Walkathon</title>
+</head>
+<body>
+<h1>Doner beløb</h1>
+<form id="sponsorForm">
+<input type="text" id="sponsorName" placeholder="Dit navn" required>
+<input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
+<select id="sponsorRecipient" required><option value="">Vælg deltager</option></select>
+<input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
+<input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
+<button type="submit">Tilføj donation</button>
+</form>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
+let participants = [];
+
+async function fetchParticipants(){
+  const res = await fetch(`${API_URL}?sheet=Deltagere`);
+  participants = await res.json();
+  const sel = document.getElementById("sponsorRecipient");
+  sel.innerHTML = '<option value="">Vælg deltager</option>';
+  participants.forEach(p=>{ const opt=document.createElement("option"); opt.value=p.Navn; opt.textContent=p.Navn; sel.appendChild(opt); });
+}
+fetchParticipants();
+
+document.getElementById("sponsorForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const name = document.getElementById("sponsorName").value.trim();
+  const phone = document.getElementById("sponsorPhone").value.trim();
+  const recipientName = document.getElementById("sponsorRecipient").value;
+  const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
+  const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
+  if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){ alert("Udfyld alle felter korrekt"); return; }
+  const recipient = participants.find(p=>p.Navn===recipientName);
+  const amount = flat + (perKm * recipient.Distance);
+  await fetch(`${API_URL}?sheet=Donationer`, {method:"POST", body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})});
+  alert("Donation registreret!");
+});
+</script>
+</body>
+</html>

@@ -5,134 +5,94 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4. Maj Walkathon</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f7f9fc; color:#333; }
-button { cursor:pointer; }
-
-/* HEADER & BURGER */
-header { position:fixed; top:0; left:0; width:100%; background:#0069d9; color:white; height:60px; display:flex; align-items:center; padding:0 15px; z-index:1000; }
-header h1 { flex:1; text-align:center; font-size:1.5em; }
-.burger { font-size:1.8em; cursor:pointer; }
-
-/* OVERLAY MENU */
-#overlayMenu { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; flex-direction:column; }
-#overlayMenu button { background:#fff; color:#0069d9; font-size:1.2em; margin:10px 0; padding:15px 25px; border:none; border-radius:10px; transition:0.3s; }
-#overlayMenu button:hover { background:#f0f0f0; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f7f9fc;color:#333;}
+a{text-decoration:none;color:#0069d9;}
+header{position:fixed;top:0;left:0;width:100%;background:#0069d9;color:white;height:60px;display:flex;align-items:center;padding:0 15px;z-index:1000;}
+header h1{flex:1;text-align:center;font-size:1.5em;}
+header .burgerNav{display:flex;gap:10px;}
+.burgerNav a{background:white;color:#0069d9;padding:8px 12px;border-radius:6px;transition:0.3s;}
+.burgerNav a:hover{background:#f0f0f0;}
 
 /* HERO */
-.hero { padding:100px 20px 40px; text-align:center; background:linear-gradient(90deg,#0069d9,#0053a3); color:white; }
-.hero h1 { font-size:2.5em; margin-bottom:20px; }
-.hero .totals { display:flex; justify-content:center; gap:40px; font-size:1.2em; margin-top:20px; }
-@media(max-width:768px){ .hero .totals { flex-direction:column; gap:10px; } }
+.hero{padding:100px 20px 40px;text-align:center;background:linear-gradient(90deg,#0069d9,#0053a3);color:white;}
+.hero h1{font-size:2.5em;margin-bottom:20px;}
+.hero .totals{display:flex;justify-content:center;gap:40px;font-size:1.2em;margin-top:20px;}
+@media(max-width:768px){.hero .totals{flex-direction:column;gap:10px;}}
 
 /* CONTAINER */
-.container { max-width:1200px; margin:0 auto; padding:20px; }
+.container{max-width:1200px;margin:0 auto;padding:20px;}
 
 /* LEADERBOARDS */
-.leaderboards { display:flex; gap:20px; flex-wrap:wrap; margin-top:40px; }
-.card { background:white; padding:20px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1); flex:1 1 300px; }
-.card h3 { color:#0069d9; margin-bottom:10px; }
+.leaderboards{display:flex;gap:20px;flex-wrap:wrap;margin-top:40px;}
+.card{background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);flex:1 1 300px;}
+.card h3{color:#0069d9;margin-bottom:15px;text-align:center;font-size:1.2em;}
+.card table{width:100%;border-collapse:collapse;}
+.card table tr:nth-child(odd){background:#f0f4f8;}
+.card table tr:hover{background:#e0ebf8;}
+.card table td, .card table th{padding:8px;text-align:center;}
+.card table th{background:#0069d9;color:white;border-radius:6px;}
 
 /* PARTICIPANT LIST */
-.participantList { margin-top:40px; background:white; padding:20px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1); }
-.participantList table { width:100%; border-collapse:collapse; }
-.participantList th, .participantList td { border:1px solid #ddd; padding:8px; text-align:left; }
-.participantList thead { background:#f0f4f8; }
-.participantList td.editable:hover { background:#eef; cursor:pointer; }
-
-/* MODALS */
-.modalContent { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; position:relative; }
-.closeModal { position:absolute; top:10px; right:15px; font-size:1.5em; cursor:pointer; color:#333; }
-.modalForm { display:flex; flex-direction:column; gap:10px; margin-top:15px; }
-.modalForm input, .modalForm select, .modalForm button { padding:12px; border-radius:6px; border:1px solid #ccc; font-size:16px; }
-.modalForm button { background:#0069d9; color:white; border:none; font-weight:bold; }
-.modalForm button:hover { background:#0053a3; }
+.participantList{margin-top:40px;background:white;padding:20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
+.participantList table{width:100%;border-collapse:collapse;}
+.participantList th, .participantList td{border:1px solid #ddd;padding:8px;text-align:left;}
+.participantList thead{background:#f0f4f8;}
+.participantList td.editable:hover{background:#eef; cursor:pointer;}
 
 /* FOOTER */
-footer { text-align:center; padding:20px; margin-top:40px; background:#eee; }
+footer{text-align:center;padding:20px;margin-top:40px;background:#eee;}
 
 /* RESPONSIVE */
-@media(max-width:768px){ .leaderboards { flex-direction:column; } }
+@media(max-width:768px){.leaderboards{flex-direction:column;}}
 </style>
 </head>
 <body>
 
 <header>
-<div class="burger" onclick="toggleOverlay()">☰</div>
-<h1>4. Maj Walkathon</h1>
+  <h1>4. Maj Walkathon</h1>
+  <nav class="burgerNav">
+    <a href="signup.html">Tilføj deltager</a>
+    <a href="donate.html">Doner beløb</a>
+  </nav>
 </header>
 
-<!-- OVERLAY MENU -->
-<div id="overlayMenu">
-<button onclick="openModal('participantModal')">Tilføj deltager</button>
-<button onclick="openModal('sponsorModal')">Doner beløb</button>
-<button onclick="toggleOverlay()">Luk menu</button>
-</div>
-
-<!-- HERO -->
 <div class="hero">
-<h1>4. Maj Walkathon – Kollegiet</h1>
-<div class="totals">
-<div><strong>Total donation:</strong> <span id="totalDonation">0</span> kr</div>
-<div><strong>Total distance:</strong> <span id="totalDistance">0</span> km</div>
-</div>
+  <h1>4. Maj Walkathon – Kollegiet</h1>
+  <div class="totals">
+    <div><strong>Total donation:</strong> <span id="totalDonation">0</span> kr</div>
+    <div><strong>Total distance:</strong> <span id="totalDistance">0</span> km</div>
+  </div>
 </div>
 
 <div class="container">
+  <!-- LEADERBOARDS -->
+  <div class="leaderboards">
+    <div class="card">
+      <h3>Top 5 distance (km)</h3>
+      <table id="leaderboardDistance"><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h3>Top 5 donationer (beløb pr deltager)</h3>
+      <table id="leaderboardDonationAmount"><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h3>Top 5 modtagere af donationer</h3>
+      <table id="leaderboardDonationCount"><tbody></tbody></table>
+    </div>
+  </div>
 
-<!-- LEADERBOARDS -->
-<div class="leaderboards">
-<div class="card">
-<h3>Top 5 distance (km)</h3>
-<table id="leaderboardDistance"><tbody></tbody></table>
-</div>
-<div class="card">
-<h3>Top 5 donationer (beløb pr deltager)</h3>
-<table id="leaderboardDonationAmount"><tbody></tbody></table>
-</div>
-<div class="card">
-<h3>Top 5 modtagere af donationer</h3>
-<table id="leaderboardDonationCount"><tbody></tbody></table>
-</div>
-</div>
-
-<!-- PARTICIPANT LIST -->
-<div class="participantList">
-<h3>Tilmeldte deltagere</h3>
-<table id="participantListTable">
-<thead><tr><th>Navn</th><th>Distance (km)</th><th>Doneret beløb</th></tr></thead>
-<tbody></tbody>
-</table>
+  <!-- PARTICIPANT LIST -->
+  <div class="participantList">
+    <h3>Tilmeldte deltagere</h3>
+    <table id="participantListTable">
+      <thead><tr><th>Navn</th><th>Distance (km)</th><th>Doneret beløb</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <footer>© 2026 4. Maj Walkathon – Kollegiet</footer>
-
-<!-- MODALS -->
-<div id="participantModal" class="modalOverlay" style="display:none;">
-<div class="modalContent">
-<span class="closeModal" onclick="closeModal('participantModal')">&times;</span>
-<h2>Tilføj deltager</h2>
-<form id="participantSignupForm" class="modalForm">
-<input type="text" id="participantNameSignup" placeholder="Indtast deltagerens navn" required>
-<button type="submit">Tilmeld</button>
-</form>
-</div>
-</div>
-
-<div id="sponsorModal" class="modalOverlay" style="display:none;">
-<div class="modalContent">
-<span class="closeModal" onclick="closeModal('sponsorModal')">&times;</span>
-<h2>Doner beløb</h2>
-<form id="sponsorForm" class="modalForm">
-<input type="text" id="sponsorName" placeholder="Dit navn (sponsor)" required>
-<input type="tel" id="sponsorPhone" placeholder="Telefonnummer (8 cifre)" required pattern="[0-9]{8}">
-<select id="sponsorRecipient" required><option value="">Vælg deltager</option></select>
-<input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
-<input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
-<button type="submit">Tilføj donation</button>
-</form>
-</div>
-</div>
 
 <script>
 const ADMIN_PASSWORD="walkathon2026";
@@ -141,75 +101,59 @@ let participants=[];
 let donors=[];
 let isAdmin=false;
 
-// BURGER MENU
-function toggleOverlay(){ const overlay=document.getElementById('overlayMenu'); overlay.style.display = overlay.style.display==='flex'?'none':'flex'; }
-function openModal(id){ document.getElementById(id).style.display='flex'; }
-function closeModal(id){ document.getElementById(id).style.display='none'; }
-
 // FETCH DATA
 async function fetchParticipants(){ const res=await fetch(`${API_URL}?sheet=Deltagere`); participants=await res.json(); updateParticipants(); updateLeaderboards(); updateTotals(); }
 async function fetchDonors(){ const res=await fetch(`${API_URL}?sheet=Donationer`); donors=await res.json(); updateLeaderboards(); updateTotals(); }
 
-// PARTICIPANT FORM
-document.getElementById("participantSignupForm").addEventListener("submit", async e=>{ e.preventDefault(); const name=document.getElementById("participantNameSignup").value.trim(); if(name){ await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:name, Distance:0})}); fetchParticipants(); } e.target.reset(); });
-
-// SPONSOR FORM
-document.getElementById("sponsorForm").addEventListener("submit", async e=>{
-e.preventDefault();
-const name=document.getElementById("sponsorName").value.trim();
-const phone=document.getElementById("sponsorPhone").value.trim();
-const recipientName=document.getElementById("sponsorRecipient").value;
-const flat=parseFloat(document.getElementById("sponsorFlat").value)||0;
-const perKm=parseFloat(document.getElementById("sponsorPerKm").value)||0;
-if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){ alert("Udfyld alle felter korrekt"); return; }
-const recipient = participants.find(p=>p.Navn===recipientName);
-const amount = flat + (perKm*recipient.Distance);
-await fetch(`${API_URL}?sheet=Donationer`, {method:"POST", body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})});
-fetchDonors(); e.target.reset();
-});
-
 // ADMIN CLICK TO EDIT DISTANCE
 async function editDistance(participant){
-if(!isAdmin){
-const pass = prompt("Indtast admin password:"); if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } isAdmin=true;
-}
-const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
-if(!isNaN(newDist) && newDist>=0){
-await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:participant.Navn, Distance:newDist})});
-fetchParticipants(); fetchDonors();
-}
+  if(!isAdmin){
+    const pass = prompt("Indtast admin password:"); if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } isAdmin=true;
+  }
+  const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
+  if(!isNaN(newDist) && newDist>=0){
+    await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:participant.Navn, Distance:newDist})});
+    fetchParticipants(); fetchDonors();
+  }
 }
 
 // UPDATE PARTICIPANTS LIST
 function updateParticipants(){
-const tbody=document.querySelector("#participantListTable tbody");
-tbody.innerHTML="";
-participants.forEach(p=>{
-const totalDonated=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
-const row=document.createElement("tr");
-row.innerHTML=`<td>${p.Navn}</td><td class="editable">${p.Distance.toFixed(1)}</td><td>${totalDonated.toFixed(0)}</td>`;
-tbody.appendChild(row);
-// CLICK TO EDIT DISTANCE
-row.querySelector("td.editable").addEventListener("click",()=>editDistance(p));
-});
-const rec=document.getElementById("sponsorRecipient");
-if(rec){ rec.innerHTML='<option value="">Vælg deltager</option>'; participants.forEach(p=>{ const opt=document.createElement("option"); opt.value=p.Navn; opt.textContent=p.Navn; rec.appendChild(opt); }); }
+  const tbody=document.querySelector("#participantListTable tbody");
+  tbody.innerHTML="";
+  participants.forEach(p=>{
+    const totalDonated=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${p.Navn}</td><td class="editable">${p.Distance.toFixed(1)}</td><td>${totalDonated.toFixed(0)}</td>`;
+    tbody.appendChild(row);
+    row.querySelector("td.editable").addEventListener("click",()=>editDistance(p));
+  });
 }
 
 // UPDATE TOTALS & LEADERBOARDS
-function updateTotals(){ document.getElementById("totalDistance").textContent=participants.reduce((a,p)=>a+p.Distance,0).toFixed(1); document.getElementById("totalDonation").textContent=donors.reduce((a,d)=>a+d.Beløb,0).toFixed(0); }
+function updateTotals(){
+  document.getElementById("totalDistance").textContent=participants.reduce((a,p)=>a+p.Distance,0).toFixed(1);
+  document.getElementById("totalDonation").textContent=donors.reduce((a,d)=>a+d.Beløb,0).toFixed(0);
+}
+
 function updateLeaderboards(){
-// Top distance
-const tbodyDist=document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
-[...participants].sort((a,b)=>b.Distance-a.Distance).slice(0,5).forEach(p=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`; tbodyDist.appendChild(row); });
-// Top donation pr deltager
-const donationSums = participants.map(p=>{ const sum=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Sum:sum}; }).sort((a,b)=>b.Sum-a.Sum).slice(0,5);
-const tbodyDonationAmount=document.querySelector("#leaderboardDonationAmount tbody"); tbodyDonationAmount.innerHTML="";
-donationSums.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyDonationAmount.appendChild(row); });
-// Top donation modtagere
-const donationReceived = participants.map(p=>{ const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Total:total}; }).sort((a,b)=>b.Total-a.Total).slice(0,5);
-const tbodyDonationCount=document.querySelector("#leaderboardDonationCount tbody"); tbodyDonationCount.innerHTML="";
-donationReceived.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyDonationCount.appendChild(row); });
+  // Top distance
+  const tbodyDist=document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
+  [...participants].sort((a,b)=>b.Distance-a.Distance).slice(0,5).forEach((p,i)=>{ 
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${i+1}. ${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`;
+    tbodyDist.appendChild(row);
+  });
+
+  // Top donation pr deltager
+  const donationSums = participants.map(p=>{ const sum=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Sum:sum}; }).sort((a,b)=>b.Sum-a.Sum).slice(0,5);
+  const tbodyDonationAmount=document.querySelector("#leaderboardDonationAmount tbody"); tbodyDonationAmount.innerHTML="";
+  donationSums.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyDonationAmount.appendChild(row); });
+
+  // Top donation modtagere
+  const donationReceived = participants.map(p=>{ const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Total:total}; }).sort((a,b)=>b.Total-a.Total).slice(0,5);
+  const tbodyDonationCount=document.querySelector("#leaderboardDonationCount tbody"); tbodyDonationCount.innerHTML="";
+  donationReceived.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyDonationCount.appendChild(row); });
 }
 
 // INIT
