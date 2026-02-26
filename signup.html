@@ -4,16 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tilføj deltager – Walkathon</title>
+<style>
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:20px;}
+header{display:flex;justify-content:flex-start;margin-bottom:20px;}
+header a{margin-right:10px;color:#0069d9;text-decoration:none;}
+</style>
 </head>
 <body>
+
+<header>
+  <a href="index.html">← Tilbage til forsiden</a>
+</header>
+
 <h1>Tilmeld deltager</h1>
 <form id="participantSignupForm">
-<input type="text" id="participantNameSignup" placeholder="Indtast deltagerens navn" required>
-<button type="submit">Tilmeld</button>
+  <input type="text" id="participantNameSignup" placeholder="Indtast deltagerens navn" required>
+  <button type="submit">Tilmeld</button>
 </form>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
+
 document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();

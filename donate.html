@@ -4,16 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Doner – Walkathon</title>
+<style>
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;padding:20px;}
+header{display:flex;justify-content:flex-start;margin-bottom:20px;}
+header a{margin-right:10px;color:#0069d9;text-decoration:none;}
+form input, form select, form button{display:block;margin:10px 0;padding:8px;width:100%;max-width:300px;}
+</style>
 </head>
 <body>
+
+<header>
+  <a href="index.html">← Tilbage til forsiden</a>
+</header>
+
 <h1>Doner beløb</h1>
 <form id="sponsorForm">
-<input type="text" id="sponsorName" placeholder="Dit navn" required>
-<input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
-<select id="sponsorRecipient" required><option value="">Vælg deltager</option></select>
-<input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
-<input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
-<button type="submit">Tilføj donation</button>
+  <input type="text" id="sponsorName" placeholder="Dit navn" required>
+  <input type="tel" id="sponsorPhone" placeholder="Telefonnummer" required pattern="[0-9]{8}">
+  <select id="sponsorRecipient" required><option value="">Vælg deltager</option></select>
+  <input type="number" id="sponsorFlat" placeholder="Engangsbeløb (kr.)">
+  <input type="number" id="sponsorPerKm" placeholder="Beløb pr. km (kr.)">
+  <button type="submit">Tilføj donation</button>
 </form>
 
 <script>

@@ -96,7 +96,7 @@ footer{text-align:center;padding:20px;margin-top:40px;background:#eee;}
 
 <script>
 const ADMIN_PASSWORD="walkathon2026";
-const API_URL="https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbzWq3IMM8-Hep50zIOYmFX_s2wy1qsfhMZzP0OMidkg_SjD9P62RhNl6XHxhUMYkQ9XMw/exec";
 let participants=[];
 let donors=[];
 let isAdmin=false;
@@ -125,8 +125,12 @@ async function editDistance(participant){
   }
   const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
   if(!isNaN(newDist) && newDist>=0){
-    await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:participant.Navn, Distance:newDist})});
-    fetchParticipants(); fetchDonors();
+    await fetch(`${API_URL}?sheet=Deltagere`, {
+      method:"POST",
+      body:JSON.stringify({Navn:participant.Navn, Distance:newDist})
+    });
+    fetchParticipants(); 
+    fetchDonors();
   }
 }
 
