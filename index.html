@@ -5,55 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4. Maj Walkathon</title>
 <style>
-/* --- RESET & BODY --- */
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f7f9fc; color:#333; }
 button { cursor:pointer; }
 
-/* --- HEADER & BURGER --- */
+/* HEADER & BURGER */
 header { position:fixed; top:0; left:0; width:100%; background:#0069d9; color:white; height:60px; display:flex; align-items:center; padding:0 15px; z-index:1000; }
-header h1 { flex:1; font-size:1.5em; text-align:center; }
+header h1 { flex:1; text-align:center; font-size:1.5em; }
 .burger { font-size:1.8em; cursor:pointer; }
 
-/* --- OVERLAY MENU --- */
+/* OVERLAY MENU */
 #overlayMenu { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; flex-direction:column; }
 #overlayMenu button { background:#fff; color:#0069d9; font-size:1.2em; margin:10px 0; padding:15px 25px; border:none; border-radius:10px; transition:0.3s; }
 #overlayMenu button:hover { background:#f0f0f0; }
 
-/* --- HERO --- */
+/* HERO */
 .hero { padding:100px 20px 40px; text-align:center; background:linear-gradient(90deg,#0069d9,#0053a3); color:white; }
 .hero h1 { font-size:2.5em; margin-bottom:20px; }
 .hero .totals { display:flex; justify-content:center; gap:40px; font-size:1.2em; margin-top:20px; }
 @media(max-width:768px){ .hero .totals { flex-direction:column; gap:10px; } }
 
-/* --- MAIN CONTAINER --- */
+/* CONTAINER */
 .container { max-width:1200px; margin:0 auto; padding:20px; }
 
-/* --- LEADERBOARDS --- */
+/* LEADERBOARDS */
 .leaderboards { display:flex; gap:20px; flex-wrap:wrap; margin-top:40px; }
 .card { background:white; padding:20px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1); flex:1 1 300px; }
 .card h3 { color:#0069d9; margin-bottom:10px; }
 
-/* --- PARTICIPANT LIST --- */
+/* PARTICIPANT LIST */
 .participantList { margin-top:40px; background:white; padding:20px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.1); }
 .participantList table { width:100%; border-collapse:collapse; }
 .participantList th, .participantList td { border:1px solid #ddd; padding:8px; text-align:left; }
 .participantList thead { background:#f0f4f8; }
+.participantList td.editable:hover { background:#eef; cursor:pointer; }
 
-/* --- FORMS INSIDE MODALS --- */
+/* MODALS */
+.modalContent { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; position:relative; }
+.closeModal { position:absolute; top:10px; right:15px; font-size:1.5em; cursor:pointer; color:#333; }
 .modalForm { display:flex; flex-direction:column; gap:10px; margin-top:15px; }
 .modalForm input, .modalForm select, .modalForm button { padding:12px; border-radius:6px; border:1px solid #ccc; font-size:16px; }
 .modalForm button { background:#0069d9; color:white; border:none; font-weight:bold; }
 .modalForm button:hover { background:#0053a3; }
 
-/* --- MODAL STYLING --- */
-.modalContent { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; position:relative; }
-.modalContent h2 { margin-bottom:10px; }
-.closeModal { position:absolute; top:10px; right:15px; font-size:1.5em; cursor:pointer; color:#333; }
-
+/* FOOTER */
 footer { text-align:center; padding:20px; margin-top:40px; background:#eee; }
 
-/* --- MOBILE --- */
+/* RESPONSIVE */
 @media(max-width:768px){ .leaderboards { flex-direction:column; } }
 </style>
 </head>
@@ -68,7 +66,6 @@ footer { text-align:center; padding:20px; margin-top:40px; background:#eee; }
 <div id="overlayMenu">
 <button onclick="openModal('participantModal')">Tilføj deltager</button>
 <button onclick="openModal('sponsorModal')">Doner beløb</button>
-<button onclick="openModal('adminModal')">Indtast distance</button>
 <button onclick="toggleOverlay()">Luk menu</button>
 </div>
 
@@ -103,7 +100,7 @@ footer { text-align:center; padding:20px; margin-top:40px; background:#eee; }
 <div class="participantList">
 <h3>Tilmeldte deltagere</h3>
 <table id="participantListTable">
-<thead><tr><th>Navn</th><th>Distance (km)</th></tr></thead>
+<thead><tr><th>Navn</th><th>Distance (km)</th><th>Doneret beløb</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
@@ -137,171 +134,87 @@ footer { text-align:center; padding:20px; margin-top:40px; background:#eee; }
 </div>
 </div>
 
-<div id="adminModal" class="modalOverlay" style="display:none;">
-<div class="modalContent">
-<span class="closeModal" onclick="closeModal('adminModal')">&times;</span>
-<h2>Indtast distance (Admin)</h2>
-<form id="adminLoginForm" class="modalForm">
-<input type="password" id="adminPassword" placeholder="Admin password" required>
-<button type="submit">Log ind</button>
-<div class="error" id="adminLoginError"></div>
-</form>
-<div id="adminControls" style="display:none;">
-<select id="participantSelect"></select>
-<input type="number" id="participantDistance" placeholder="Distance gået (km)" required>
-<button id="updateDistanceBtn">Opdater distance</button>
-</div>
-</div>
-</div>
-
 <script>
-// --- BURGER OVERLAY ---
-function toggleOverlay(){
-    const overlay=document.getElementById('overlayMenu');
-    overlay.style.display = overlay.style.display==='flex'?'none':'flex';
-}
+const ADMIN_PASSWORD="walkathon2026";
+const API_URL="https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
+let participants=[];
+let donors=[];
+let isAdmin=false;
 
-// --- MODALS ---
+// BURGER MENU
+function toggleOverlay(){ const overlay=document.getElementById('overlayMenu'); overlay.style.display = overlay.style.display==='flex'?'none':'flex'; }
 function openModal(id){ document.getElementById(id).style.display='flex'; }
 function closeModal(id){ document.getElementById(id).style.display='none'; }
 
-// --- DATA & API ---
-const ADMIN_PASSWORD = "walkathon2026";
-const API_URL = "https://script.google.com/macros/s/AKfycbxPcNg0sgaPJycDm2vS-hQSeqF7_vmvfsQiF37Ieq-HyJF-Qm9BihSYk9XNR1mPpNB4EQ/exec";
-let participants = [];
-let donors = [];
+// FETCH DATA
+async function fetchParticipants(){ const res=await fetch(`${API_URL}?sheet=Deltagere`); participants=await res.json(); updateParticipants(); updateLeaderboards(); updateTotals(); }
+async function fetchDonors(){ const res=await fetch(`${API_URL}?sheet=Donationer`); donors=await res.json(); updateLeaderboards(); updateTotals(); }
 
-// --- FETCH DATA ---
-async function fetchParticipants(){
-    const res = await fetch(`${API_URL}?sheet=Deltagere`);
-    participants = await res.json();
-    updateParticipants();
-    updateLeaderboards();
-    updateTotals();
-}
-async function fetchDonors(){
-    const res = await fetch(`${API_URL}?sheet=Donationer`);
-    donors = await res.json();
-    updateLeaderboards();
-    updateTotals();
-}
+// PARTICIPANT FORM
+document.getElementById("participantSignupForm").addEventListener("submit", async e=>{ e.preventDefault(); const name=document.getElementById("participantNameSignup").value.trim(); if(name){ await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:name, Distance:0})}); fetchParticipants(); } e.target.reset(); });
 
-// --- PARTICIPANT FORM ---
-document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
-    e.preventDefault();
-    const name=document.getElementById("participantNameSignup").value.trim();
-    if(name){
-        await fetch(`${API_URL}?sheet=Deltagere`, {
-            method:"POST",
-            body:JSON.stringify({Navn:name, Distance:0})
-        });
-        fetchParticipants();
-    }
-    e.target.reset();
-});
-
-// --- SPONSOR FORM ---
+// SPONSOR FORM
 document.getElementById("sponsorForm").addEventListener("submit", async e=>{
-    e.preventDefault();
-    const name = document.getElementById("sponsorName").value.trim();
-    const phone = document.getElementById("sponsorPhone").value.trim();
-    const recipientName = document.getElementById("sponsorRecipient").value;
-    const flat = parseFloat(document.getElementById("sponsorFlat").value) || 0;
-    const perKm = parseFloat(document.getElementById("sponsorPerKm").value) || 0;
-    if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){
-        alert("Udfyld alle felter korrekt");
-        return;
-    }
-    const recipient = participants.find(p=>p.Navn===recipientName);
-    const amount = flat + (perKm * recipient.Distance);
-    await fetch(`${API_URL}?sheet=Donationer`, {
-        method:"POST",
-        body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})
-    });
-    fetchDonors();
-    e.target.reset();
+e.preventDefault();
+const name=document.getElementById("sponsorName").value.trim();
+const phone=document.getElementById("sponsorPhone").value.trim();
+const recipientName=document.getElementById("sponsorRecipient").value;
+const flat=parseFloat(document.getElementById("sponsorFlat").value)||0;
+const perKm=parseFloat(document.getElementById("sponsorPerKm").value)||0;
+if(!name || !phone || !recipientName || (flat<=0 && perKm<=0)){ alert("Udfyld alle felter korrekt"); return; }
+const recipient = participants.find(p=>p.Navn===recipientName);
+const amount = flat + (perKm*recipient.Distance);
+await fetch(`${API_URL}?sheet=Donationer`, {method:"POST", body:JSON.stringify({Sponsor:name, Telefon:phone, Mål:recipientName, Beløb:amount})});
+fetchDonors(); e.target.reset();
 });
 
-// --- ADMIN LOGIN & UPDATE ---
-document.getElementById("adminLoginForm").addEventListener("submit", e=>{
-    e.preventDefault();
-    const pass=document.getElementById("adminPassword").value;
-    if(pass===ADMIN_PASSWORD){
-        document.getElementById("adminControls").style.display="block";
-        document.getElementById("adminLoginError").textContent="";
-        e.target.style.display="none";
-    } else { document.getElementById("adminLoginError").textContent="Forkert password"; }
-});
-document.getElementById("updateDistanceBtn").addEventListener("click", async ()=>{
-    const sel=document.getElementById("participantSelect").value;
-    const dist=parseFloat(document.getElementById("participantDistance").value);
-    if(sel && dist>=0){
-        await fetch(`${API_URL}?sheet=Deltagere`, {
-            method:"POST",
-            body:JSON.stringify({Navn:sel, Distance:dist})
-        });
-        fetchParticipants();
-        fetchDonors();
-        document.getElementById("participantDistance").value="";
-    }
-});
+// ADMIN CLICK TO EDIT DISTANCE
+async function editDistance(participant){
+if(!isAdmin){
+const pass = prompt("Indtast admin password:"); if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } isAdmin=true;
+}
+const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
+if(!isNaN(newDist) && newDist>=0){
+await fetch(`${API_URL}?sheet=Deltagere`, {method:"POST", body:JSON.stringify({Navn:participant.Navn, Distance:newDist})});
+fetchParticipants(); fetchDonors();
+}
+}
 
-// --- UPDATE FUNCTIONS ---
+// UPDATE PARTICIPANTS LIST
 function updateParticipants(){
-    const tbody = document.querySelector("#participantListTable tbody");
-    tbody.innerHTML="";
-    participants.forEach(p=>{
-        const row=document.createElement("tr");
-        row.innerHTML=`<td>${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`;
-        tbody.appendChild(row);
-    });
-    const sel = document.getElementById("participantSelect");
-    const rec = document.getElementById("sponsorRecipient");
-    if(sel && rec){
-        sel.innerHTML=""; rec.innerHTML='<option value="">Vælg deltager</option>';
-        participants.forEach(p=>{
-            const opt1=document.createElement("option"); opt1.value=p.Navn; opt1.textContent=p.Navn;
-            const opt2=document.createElement("option"); opt2.value=p.Navn; opt2.textContent=p.Navn;
-            sel.appendChild(opt1); rec.appendChild(opt2);
-        });
-    }
+const tbody=document.querySelector("#participantListTable tbody");
+tbody.innerHTML="";
+participants.forEach(p=>{
+const totalDonated=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
+const row=document.createElement("tr");
+row.innerHTML=`<td>${p.Navn}</td><td class="editable">${p.Distance.toFixed(1)}</td><td>${totalDonated.toFixed(0)}</td>`;
+tbody.appendChild(row);
+// CLICK TO EDIT DISTANCE
+row.querySelector("td.editable").addEventListener("click",()=>editDistance(p));
+});
+const rec=document.getElementById("sponsorRecipient");
+if(rec){ rec.innerHTML='<option value="">Vælg deltager</option>'; participants.forEach(p=>{ const opt=document.createElement("option"); opt.value=p.Navn; opt.textContent=p.Navn; rec.appendChild(opt); }); }
 }
 
-function updateDonors(){
-    updateLeaderboards();
-    updateTotals();
-}
-
-function updateTotals(){
-    const totalDistance=participants.reduce((sum,p)=>sum+p.Distance,0);
-    const totalDonation=donors.reduce((sum,d)=>sum+d.Beløb,0);
-    document.getElementById("totalDistance").textContent=totalDistance.toFixed(1);
-    document.getElementById("totalDonation").textContent=totalDonation.toFixed(0);
-}
-
+// UPDATE TOTALS & LEADERBOARDS
+function updateTotals(){ document.getElementById("totalDistance").textContent=participants.reduce((a,p)=>a+p.Distance,0).toFixed(1); document.getElementById("totalDonation").textContent=donors.reduce((a,d)=>a+d.Beløb,0).toFixed(0); }
 function updateLeaderboards(){
-    // Top distance
-    const topDistance = [...participants].sort((a,b)=>b.Distance - a.Distance).slice(0,5);
-    const tbodyDist = document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
-    topDistance.forEach(p=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`; tbodyDist.appendChild(row); });
-
-    // Top donation pr deltager
-    const donationSums = participants.map(p=>{ const sum=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Sum:sum}; });
-    const topDonationAmount = donationSums.sort((a,b)=>b.Sum - a.Sum).slice(0,5);
-    const tbodyDonationAmount = document.querySelector("#leaderboardDonationAmount tbody"); tbodyDonationAmount.innerHTML="";
-    topDonationAmount.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyDonationAmount.appendChild(row); });
-
-    // Top modtagere
-    const donationReceived = participants.map(p=>{ const totalReceived=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Total:totalReceived}; });
-    const topDonationReceived = donationReceived.sort((a,b)=>b.Total - a.Total).slice(0,5);
-    const tbodyDonationCount = document.querySelector("#leaderboardDonationCount tbody"); tbodyDonationCount.innerHTML="";
-    topDonationReceived.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyDonationCount.appendChild(row); });
+// Top distance
+const tbodyDist=document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
+[...participants].sort((a,b)=>b.Distance-a.Distance).slice(0,5).forEach(p=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${p.Navn}</td><td>${p.Distance.toFixed(1)}</td>`; tbodyDist.appendChild(row); });
+// Top donation pr deltager
+const donationSums = participants.map(p=>{ const sum=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Sum:sum}; }).sort((a,b)=>b.Sum-a.Sum).slice(0,5);
+const tbodyDonationAmount=document.querySelector("#leaderboardDonationAmount tbody"); tbodyDonationAmount.innerHTML="";
+donationSums.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyDonationAmount.appendChild(row); });
+// Top donation modtagere
+const donationReceived = participants.map(p=>{ const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Total:total}; }).sort((a,b)=>b.Total-a.Total).slice(0,5);
+const tbodyDonationCount=document.querySelector("#leaderboardDonationCount tbody"); tbodyDonationCount.innerHTML="";
+donationReceived.forEach(d=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyDonationCount.appendChild(row); });
 }
 
-// --- INIT ---
+// INIT
 fetchParticipants();
 fetchDonors();
 </script>
-
 </body>
 </html>
