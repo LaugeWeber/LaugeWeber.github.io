@@ -73,12 +73,12 @@ footer{text-align:center;padding:20px;margin-top:40px;background:#eee;}
       <table id="leaderboardDistance"><tbody></tbody></table>
     </div>
     <div class="card">
-      <h3>Top 5 donationer (beløb pr deltager)</h3>
-      <table id="leaderboardDonationAmount"><tbody></tbody></table>
+      <h3>Top 5 donatorer (beløb)</h3>
+      <table id="leaderboardTopDonors"><tbody></tbody></table>
     </div>
     <div class="card">
-      <h3>Top 5 modtagere af donationer</h3>
-      <table id="leaderboardDonationCount"><tbody></tbody></table>
+      <h3>Top 5 modtagere (beløb)</h3>
+      <table id="leaderboardTopRecipients"><tbody></tbody></table>
     </div>
   </div>
 
@@ -102,13 +102,26 @@ let donors=[];
 let isAdmin=false;
 
 // FETCH DATA
-async function fetchParticipants(){ const res=await fetch(`${API_URL}?sheet=Deltagere`); participants=await res.json(); updateParticipants(); updateLeaderboards(); updateTotals(); }
-async function fetchDonors(){ const res=await fetch(`${API_URL}?sheet=Donationer`); donors=await res.json(); updateLeaderboards(); updateTotals(); }
+async function fetchParticipants(){ 
+  const res=await fetch(`${API_URL}?sheet=Deltagere`); 
+  participants=await res.json(); 
+  updateParticipants(); 
+  updateLeaderboards(); 
+  updateTotals(); 
+}
+async function fetchDonors(){ 
+  const res=await fetch(`${API_URL}?sheet=Donationer`); 
+  donors=await res.json(); 
+  updateLeaderboards(); 
+  updateTotals(); 
+}
 
 // ADMIN CLICK TO EDIT DISTANCE
 async function editDistance(participant){
   if(!isAdmin){
-    const pass = prompt("Indtast admin password:"); if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } isAdmin=true;
+    const pass = prompt("Indtast admin password:"); 
+    if(pass!==ADMIN_PASSWORD){ alert("Forkert password"); return; } 
+    isAdmin=true;
   }
   const newDist = parseFloat(prompt(`Indtast distance for ${participant.Navn} (km):`, participant.Distance));
   if(!isNaN(newDist) && newDist>=0){
@@ -130,12 +143,13 @@ function updateParticipants(){
   });
 }
 
-// UPDATE TOTALS & LEADERBOARDS
+// UPDATE TOTALS
 function updateTotals(){
   document.getElementById("totalDistance").textContent=participants.reduce((a,p)=>a+p.Distance,0).toFixed(1);
   document.getElementById("totalDonation").textContent=donors.reduce((a,d)=>a+d.Beløb,0).toFixed(0);
 }
 
+// UPDATE LEADERBOARDS
 function updateLeaderboards(){
   // Top distance
   const tbodyDist=document.querySelector("#leaderboardDistance tbody"); tbodyDist.innerHTML="";
@@ -145,15 +159,21 @@ function updateLeaderboards(){
     tbodyDist.appendChild(row);
   });
 
-  // Top donation pr deltager
-  const donationSums = participants.map(p=>{ const sum=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Sum:sum}; }).sort((a,b)=>b.Sum-a.Sum).slice(0,5);
-  const tbodyDonationAmount=document.querySelector("#leaderboardDonationAmount tbody"); tbodyDonationAmount.innerHTML="";
-  donationSums.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyDonationAmount.appendChild(row); });
+  // Top donatorer (beløb)
+  const donorTotals = {};
+  donors.forEach(d=>{ donorTotals[d.Sponsor]=(donorTotals[d.Sponsor]||0)+d.Beløb; });
+  const topDonors = Object.entries(donorTotals).map(([name,total])=>({Navn:name, Sum:total}))
+                     .sort((a,b)=>b.Sum-a.Sum).slice(0,5);
+  const tbodyTopDonors=document.querySelector("#leaderboardTopDonors tbody"); tbodyTopDonors.innerHTML="";
+  topDonors.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Sum.toFixed(0)}</td>`; tbodyTopDonors.appendChild(row); });
 
-  // Top donation modtagere
-  const donationReceived = participants.map(p=>{ const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0); return {Navn:p.Navn, Total:total}; }).sort((a,b)=>b.Total-a.Total).slice(0,5);
-  const tbodyDonationCount=document.querySelector("#leaderboardDonationCount tbody"); tbodyDonationCount.innerHTML="";
-  donationReceived.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyDonationCount.appendChild(row); });
+  // Top modtagere (beløb)
+  const recipientTotals = participants.map(p=>{
+    const total=donors.filter(d=>d.Mål===p.Navn).reduce((a,d)=>a+d.Beløb,0);
+    return {Navn:p.Navn, Total:total};
+  }).sort((a,b)=>b.Total-a.Total).slice(0,5);
+  const tbodyTopRecipients=document.querySelector("#leaderboardTopRecipients tbody"); tbodyTopRecipients.innerHTML="";
+  recipientTotals.forEach((d,i)=>{ const row=document.createElement("tr"); row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`; tbodyTopRecipients.appendChild(row); });
 }
 
 // INIT
