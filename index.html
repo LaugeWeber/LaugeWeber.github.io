@@ -1,11 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="da">
 <head>
     <meta charset="UTF-8">
-    <title>Walkathon</title>
+    <title>4. Maj Walkathon – Kollegiet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            color: #333;
+        }
+        header {
+            background: #0069d9;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            margin: 0.5em 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0069d9;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0053a3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        footer {
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+            background: #eee;
+        }
+    </style>
 </head>
 <body>
-    <h1>Walkathon</h1>
-    <p>Min hjemmeside virker 🚀</p>
+    <header>
+        <h1>4. Maj Walkathon – Kollegiet</h1>
+        <p>Gå for fællesskab, gå for donationer!</p>
+    </header>
+
+    <div class="container">
+        <!-- DISTANCE FORM -->
+        <h2>Indtast distance</h2>
+        <form id="distanceForm">
+            <input type="text" id="participantName" placeholder="Deltagerens navn" required>
+            <input type="number" id="distanceWalked" placeholder="Distance gået (km)" required>
+            <button type="submit">Tilføj distance</button>
+        </form>
+
+        <!-- DONATION FORM -->
+        <h2>Indtast donation</h2>
+        <form id="donationForm">
+            <input type="text" id="donorName" placeholder="Donors navn" required>
+            <input type="number" id="donationAmount" placeholder="Doneret beløb (kr.)" required>
+            <button type="submit">Tilføj donation</button>
+        </form>
+
+        <!-- OUTPUT -->
+        <h2>Resultater</h2>
+
+        <div>
+            <strong>Total distance gået:</strong> <span id="totalDistance">0</span> km<br>
+            <strong>Total donation:</strong> <span id="totalDonations">0</span> kr.
+        </div>
+
+        <h3>Deltagere</h3>
+        <table id="participantsTable">
+            <thead>
+                <tr><th>Navn</th><th>Distance (km)</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Donorer</h3>
+        <table id="donorsTable">
+            <thead>
+                <tr><th>Navn</th><th>Beløb (kr.)</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <footer>
+        4. Maj Walkathon – Kollegiet | © 2026
+    </footer>
+
+    <script>
+        const participants = [];
+        const donors = [];
+
+        const distanceForm = document.getElementById("distanceForm");
+        const donationForm = document.getElementById("donationForm");
+
+        distanceForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const name = document.getElementById("participantName").value.trim();
+            const distance = parseFloat(document.getElementById("distanceWalked").value);
+
+            if (name && distance > 0) {
+                participants.push({ name, distance });
+                renderParticipants();
+                updateTotals();
+            }
+
+            distanceForm.reset();
+        });
+
+        donationForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const name = document.getElementById("donorName").value.trim();
+            const amount = parseFloat(document.getElementById("donationAmount").value);
+
+            if (name && amount > 0) {
+                donors.push({ name, amount });
+                renderDonors();
+                updateTotals();
+            }
+
+            donationForm.reset();
+        });
+
+        function renderParticipants() {
+            const tbody = document.getElementById("participantsTable").querySelector("tbody");
+            tbody.innerHTML = "";
+            participants.forEach(p => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${p.name}</td><td>${p.distance.toFixed(1)}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderDonors() {
+            const tbody = document.getElementById("donorsTable").querySelector("tbody");
+            tbody.innerHTML = "";
+            donors.forEach(d => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${d.name}</td><td>${d.amount.toFixed(0)}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateTotals() {
+            const totalDistance = participants.reduce((sum, p) => sum + p.distance, 0);
+            const totalDonations = donors.reduce((sum, d) => sum + d.amount, 0);
+
+            document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
+            document.getElementById("totalDonations").textContent = totalDonations.toFixed(0);
+        }
+    </script>
 </body>
 </html>
