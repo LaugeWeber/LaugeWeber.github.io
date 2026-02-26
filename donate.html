@@ -402,6 +402,17 @@ document.getElementById("sponsorRecipient").addEventListener("change", e=>{
 document.getElementById("sponsorFlat").addEventListener("input", updateSummary);
 document.getElementById("sponsorPerKm").addEventListener("input", updateSummary);
 
+document.getElementById("sponsorPhone").addEventListener("input", function(){
+  const phone = this.value.trim();
+  if(phone.length === 8){
+    const existingDonor = donors.find(d=>d.Telefon === phone);
+    if(existingDonor){
+      document.getElementById("sponsorName").value = existingDonor.Navn;
+      document.getElementById("sponsorEmail").value = existingDonor.Email;
+    }
+  }
+});
+
 fetchParticipants().then(updateSummary);
 fetchDonors();
 
