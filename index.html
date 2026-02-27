@@ -159,10 +159,8 @@ header{
 
 .wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
 .hero{
-  display:grid;
-  grid-template-columns:1.2fr .8fr;
-  gap:28px;
-  align-items:stretch;
+  display:flex;
+  justify-content:center;
   margin-bottom:28px;
 }
 .hero-card{
@@ -189,11 +187,13 @@ header{
   background:linear-gradient(140deg, #0e7c86 0%, #0c5660 100%);
   color:#fff;
   border-radius:var(--radius);
-  padding:28px;
+  padding:32px;
   box-shadow:var(--shadow);
   display:flex;
   flex-direction:column;
-  justify-content:space-between;
+  gap:20px;
+  max-width:700px;
+  width:100%;
 }
 .hero-side h2{font-size:1.5rem;margin-bottom:12px;}
 .hero-side ul{list-style:none;display:grid;gap:10px;}
@@ -255,7 +255,6 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 .stagger > *:nth-child(4){animation-delay:.3s;}
 
 @media (max-width: 980px){
-  .hero{grid-template-columns:1fr;}
   .grid{grid-template-columns:1fr 1fr;}
   .leaderboards{grid-template-columns:1fr;}
   .participants-grid{grid-template-columns:1fr;}
@@ -263,7 +262,6 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 }
 @media (max-width: 680px){
   .grid{grid-template-columns:1fr;}
-  .hero h1{font-size:2.2rem;}
   .admin-preview{max-height:200px;}
 }
 </style>
@@ -284,25 +282,25 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 
 <main class="wrap">
   <section class="hero">
-    <div class="hero-card">
-      <h1>Walkathon overblik</h1>
-      <p>Følg live med i distance, donationer og topindsamlinger. Alt er samlet ét sted, så du kan heppe og handle med det samme.</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="donate.html">Donér nu</a>
-        <a class="btn ghost" href="signup.html">Tilmeld deltager</a>
-      </div>
-    </div>
     <div class="hero-side">
-      <h2>📅 Tidspunkt</h2>
-      <p style="font-size:1.1rem;margin-bottom:16px;"><strong>Søndag d. 21. juni kl. 18:00<br>til<br>Mandag d. 22. juni kl. 18:00</strong></p>
-      <h2>👥 Med familie og venner</h2>
-      <ul>
-        <li>Godt selskab og hyggelig stemning</li>
-        <li>Hyggelig udendørs lounge i haven</li>
-        <li>Snacks og mulighed for at lave mad</li>
-        <li>Udvalgte gåruter i Frederiksberg og omegn</li>
-        <li>Del meget gerne hjemmesiden ❤️</li>
-      </ul>
+      <div>
+        <h2>📅 Tidspunkt</h2>
+        <p style="font-size:1.1rem;margin-bottom:0;"><strong>Søndag d. 21. juni kl. 18:00<br>til<br>Mandag d. 22. juni kl. 18:00</strong></p>
+      </div>
+      <div>
+        <h2>👥 Med familie og venner</h2>
+        <ul>
+          <li>Godt selskab og hyggelig stemning</li>
+          <li>Hyggelig udendørs lounge i haven</li>
+          <li>Snacks og mulighed for at lave mad</li>
+          <li>Udvalgte gåruter i Frederiksberg og omegn</li>
+          <li>Del meget gerne hjemmesiden ❤️</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a class="btn primary" href="donate.html" style="background:#fff;color:var(--accent);">Donér nu</a>
+        <a class="btn ghost" href="signup.html" style="background:rgba(255,255,255,.2);color:#fff;">Tilmeld deltager</a>
+      </div>
     </div>
   </section>
 
