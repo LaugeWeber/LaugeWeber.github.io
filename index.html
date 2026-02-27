@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4. Maj Walkathon</title>
 <style>
-@import url("https://script.google.com/macros/s/AKfycbyMIEA9-czRl05M0jrbRdAFCOJWYZ3J1YtwskSfoQaQ5HJOiZno-OwkjnqE4QekCBXXVA/exec");
 :root{
   --bg:#f3f6fb;
   --panel:#ffffff;
@@ -403,6 +402,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
     </div>
     <div class="card admin-panel">
       <div class="admin-tools" id="adminTools">
+        <button id="testConnection" type="button" style="background:#f2b705;">Test forbindelse</button>
         <button id="sendDonorEmails" type="button">Send donor-mails</button>
         <span class="help" id="adminEmailStatus"></span>
       </div>
@@ -429,7 +429,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbz9XjKzc7eFqHycEaxJCyeTaHNzEy72Ws_nnJVyWhgcBRyLQHe_29tZ0htRUtDdpw4X9w/exec";
 const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
@@ -757,6 +757,34 @@ document.getElementById("participantSearch").addEventListener("input", e=>{
 document.getElementById("participantSort").addEventListener("change", e=>{
   sortKey = e.target.value;
   updateParticipants();
+});
+
+document.getElementById("testConnection").addEventListener("click", async ()=>{
+  if(!isAdmin) return;
+  const status = document.getElementById("adminEmailStatus");
+  status.textContent = "Tester forbindelse...";
+  status.style.color = "";
+  
+  try{
+    const testUrl = `${API_URL}?action=test`;
+    console.log("Testing:", testUrl);
+    const res = await fetch(testUrl, { method:"GET" });
+    console.log("Test response status:", res.status);
+    const text = await res.text();
+    console.log("Test response body:", text);
+    
+    if(res.ok){
+      status.textContent = `✓ Forbindelse OK! Status: ${res.status}`;
+      status.style.color = "#0e7c86";
+    } else {
+      status.textContent = `✗ HTTP ${res.status}. Se console (F12) for detaljer.`;
+      status.style.color = "#b00020";
+    }
+  } catch (err){
+    console.error("Test error:", err);
+    status.textContent = `✗ Netværksfejl: ${err.message}. Tjek deployment!`;
+    status.style.color = "#b00020";
+  }
 });
 
 document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
