@@ -799,8 +799,7 @@ document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
     console.log("Sending to:", url);
     
     const res = await fetch(url, { 
-      method:"POST",
-      headers: { "Content-Type": "application/json" }
+      method:"GET"
     });
     
     console.log("Response status:", res.status);
@@ -816,15 +815,8 @@ document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
     }
   } catch (err){
     console.error("Email send error:", err);
-    try{
-      const fallbackUrl = `${API_URL}?action=${EMAIL_ACTION}`;
-      await fetch(fallbackUrl, { method:"GET", mode:"no-cors" });
-      status.textContent = "Anmodning sendt (kan ikke bekræfte)";
-      status.style.color = "#f2b705";
-    } catch (fallbackErr){
-      status.textContent = `Netværksfejl: ${err.message}. Tjek at Web App er deployed korrekt.`;
-      status.style.color = "#b00020";
-    }
+    status.textContent = `Netværksfejl: ${err.message}`;
+    status.style.color = "#b00020";
   }
 });
 
