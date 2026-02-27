@@ -537,16 +537,23 @@ function sendAggregatedPaymentEmails() {
     
     // Check email quota
     const emailCount = Object.keys(donorMap).length;
-    const remainingQuota = MailApp.getRemainingDailyQuota();
-    
+    let remainingQuota = null;
+
+    try {
+      remainingQuota = MailApp.getRemainingDailyQuota();
+    } catch (quotaErr) {
+      Logger.log("Quota check skipped (missing auth): " + quotaErr.toString());
+    }
+
     Logger.log("Emails to send: " + emailCount);
-    Logger.log("Remaining quota: " + remainingQuota);
-    
-    if (emailCount > remainingQuota) {
-      throw new Error(
-        "Ikke nok email quota. Skal sende " + emailCount + 
-        " emails, men har kun " + remainingQuota + " tilbage i dag."
-      );
+    if (remainingQuota !== null) {
+      Logger.log("Remaining quota: " + remainingQuota);
+      if (emailCount > remainingQuota) {
+        throw new Error(
+          "Ikke nok email quota. Skal sende " + emailCount + 
+          " emails, men har kun " + remainingQuota + " tilbage i dag."
+        );
+      }
     }
     
     // Send emails
