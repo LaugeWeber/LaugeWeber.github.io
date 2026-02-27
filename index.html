@@ -59,6 +59,68 @@ header{
   font-weight:600;
 }
 .nav-links a.primary{background:var(--accent);color:#fff;}
+.admin-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(19,32,51,.08);
+  border:none;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+}
+.admin-badge{
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:700;
+  background:rgba(14,124,134,.15);
+  color:var(--accent);
+  vertical-align:middle;
+}
+.admin-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(19,32,51,.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:20;
+}
+.admin-modal.active{display:flex;}
+.admin-card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+  width:100%;
+  max-width:360px;
+  display:grid;
+  gap:12px;
+}
+.admin-actions{display:flex;gap:10px;}
+.admin-actions button{flex:1;}
+.admin-ghost{background:rgba(19,32,51,.06);color:var(--ink);}
+.admin-tools{display:none;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
+.admin-tools.active{display:flex;}
+.admin-tools button{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:8px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.distance-input{
+  width:110px;
+  padding:6px 8px;
+  border-radius:8px;
+  border:1px solid #d7dfeb;
+  font-family:inherit;
+}
 
 .wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
 .hero{
@@ -179,6 +241,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <a href="index.html">Oversigt</a>
       <a href="signup.html">Tilmeld deltager</a>
       <a class="primary" href="donate.html">Donér beløb</a>
+      <button class="admin-btn" id="adminButton" type="button">Admin<span class="admin-badge" id="adminStatus" style="display:none;">OK</span></button>
     </div>
   </div>
 </header>
@@ -286,7 +349,10 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
           <thead><tr><th>Navn</th><th>Distance (km)</th><th>Donation (kr)</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="admin-row"><button id="adminToggle">Bliv admin</button></div>
+        <div class="admin-tools" id="adminTools">
+          <button id="sendDonorEmails" type="button">Send donor-mails</button>
+          <span class="help" id="adminEmailStatus"></span>
+        </div>
       </div>
       <div class="card">
         <h3>Seneste donationer</h3>
@@ -298,8 +364,25 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 
 <footer>© 2026 4. Maj Walkathon – Kollegiet</footer>
 
+<div class="admin-modal" id="adminModal" aria-hidden="true">
+  <div class="admin-card">
+    <h3>Admin login</h3>
+    <label for="adminPassword">Kode</label>
+    <input type="password" id="adminPassword" placeholder="Indtast kode">
+    <div class="help" id="adminStatusText"></div>
+    <div class="admin-actions">
+      <button class="btn primary" id="adminLogin" type="button">Log ind</button>
+      <button class="btn admin-ghost" id="adminCancel" type="button">Annuller</button>
+    </div>
+    <button class="btn ghost" id="adminLogout" type="button">Log ud</button>
+  </div>
+</div>
+
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+const ADMIN_KEY="walkathon_admin";
+const ADMIN_CODE="123";
+const EMAIL_ACTION="sendDonorEmails";
 const GOAL_DISTANCE=250;
 const GOAL_DONATION=20000;
 let participants=[];
@@ -331,37 +414,71 @@ function calculateDonationForParticipant(name, distance){
     },0);
 }
 
-/* ADMIN – BLIV ADMIN */
-function becomeAdmin(){
-  const code = prompt("Indtast admin kode:");
-  if(code==="123"){
-    isAdmin=true;
-    alert("Admin aktiveret");
-  } else {
-    alert("Forkert kode");
-  }
+/* ADMIN */
+function setAdminState(active){
+  isAdmin = active;
+  localStorage.setItem(ADMIN_KEY, active ? "1" : "0");
+  const badge = document.getElementById("adminStatus");
+  badge.style.display = active ? "inline-block" : "none";
+  const tools = document.getElementById("adminTools");
+  tools.classList.toggle("active", active);
+  updateParticipants();
 }
 
-/* EDIT DISTANCE (PLUS/MINUS) */
-async function editDistance(participant){
-  if(!isAdmin){
-    alert("Du skal først trykke 'Bliv admin'");
-    return;
-  }
+function openAdminModal(){
+  const modal = document.getElementById("adminModal");
+  const status = document.getElementById("adminStatusText");
+  const logout = document.getElementById("adminLogout");
+  status.textContent = "";
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  logout.style.display = isAdmin ? "block" : "none";
+  document.getElementById("adminPassword").value = "";
+}
 
-  const delta = parseFloat(prompt(`Hvor mange km har ${participant.Navn} lige gået? (brug minus hvis nødvendigt)`));
-  if(isNaN(delta)) return;
+function closeAdminModal(){
+  const modal = document.getElementById("adminModal");
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+}
 
-  const newDistance = Number(participant.Distance) + delta;
+function initAdmin(){
+  isAdmin = localStorage.getItem(ADMIN_KEY) === "1";
+  setAdminState(isAdmin);
+  document.getElementById("adminButton").addEventListener("click", openAdminModal);
+  document.getElementById("adminCancel").addEventListener("click", closeAdminModal);
+  document.getElementById("adminLogin").addEventListener("click", ()=>{
+    const code = document.getElementById("adminPassword").value.trim();
+    const status = document.getElementById("adminStatusText");
+    if(code === ADMIN_CODE){
+      setAdminState(true);
+      status.textContent = "Admin aktiv";
+      status.style.color = "#0e7c86";
+      closeAdminModal();
+    } else {
+      status.textContent = "Forkert kode";
+      status.style.color = "#b00020";
+    }
+  });
+  document.getElementById("adminLogout").addEventListener("click", ()=>{
+    setAdminState(false);
+    closeAdminModal();
+  });
+  document.getElementById("adminModal").addEventListener("click", e=>{
+    if(e.target.id === "adminModal") closeAdminModal();
+  });
+}
 
+/* EDIT DISTANCE INLINE */
+async function updateDistance(name, value){
+  if(!isAdmin) return;
   await fetch(`${API_URL}?sheet=Deltagere`, {
     method:"POST",
     body:JSON.stringify({
-      Navn:participant.Navn,
-      Distance:newDistance
+      Navn:name,
+      Distance:value
     })
   });
-
   fetchParticipants();
   fetchDonors();
 }
@@ -387,15 +504,32 @@ function updateParticipants(){
 
   rows.forEach(p=>{
     const row=document.createElement("tr");
+    const distanceCell = isAdmin
+      ? `<input class="distance-input" type="number" step="0.1" min="0" value="${Number(p.Distance).toFixed(1)}" data-name="${p.Navn}">`
+      : `${Number(p.Distance).toFixed(1)}`;
     row.innerHTML=`
       <td>${p.Navn}</td>
-      <td class="editable">${Number(p.Distance).toFixed(1)}</td>
+      <td>${distanceCell}</td>
       <td>${p.donation.toFixed(0)}</td>
     `;
     tbody.appendChild(row);
-    row.querySelector("td.editable")
-      .addEventListener("click",()=>editDistance(p));
   });
+
+  if(isAdmin){
+    tbody.querySelectorAll(".distance-input").forEach(input=>{
+      input.addEventListener("keydown", e=>{
+        if(e.key === "Enter"){
+          e.preventDefault();
+          input.blur();
+        }
+      });
+      input.addEventListener("change", e=>{
+        const value = parseFloat(e.target.value);
+        if(isNaN(value)) return;
+        updateDistance(e.target.dataset.name, value);
+      });
+    });
+  }
 }
 
 /* UPDATE TOTALS */
@@ -513,9 +647,30 @@ document.getElementById("participantSort").addEventListener("change", e=>{
   updateParticipants();
 });
 
-document.getElementById("adminToggle").addEventListener("click", becomeAdmin);
+document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
+  if(!isAdmin) return;
+  const status = document.getElementById("adminEmailStatus");
+  if(!confirm("Send mail til alle donatorer nu?")) return;
+  status.textContent = "Sender mails...";
+  status.style.color = "";
+  try{
+    const res = await fetch(`${API_URL}?action=${EMAIL_ACTION}`, { method:"POST" });
+    const data = await res.json().catch(()=>null);
+    if(res.ok){
+      status.textContent = data?.message || "Mails sendt.";
+      status.style.color = "#0e7c86";
+    } else {
+      status.textContent = "Kunne ikke sende mails.";
+      status.style.color = "#b00020";
+    }
+  } catch (err){
+    status.textContent = "Netvaerksfejl ved afsendelse.";
+    status.style.color = "#b00020";
+  }
+});
 
 /* INIT */
+initAdmin();
 fetchParticipants();
 fetchDonors();
 </script>

@@ -57,6 +57,50 @@ header{
   font-weight:600;
 }
 .nav-links a.primary{background:var(--accent);color:#fff;}
+.admin-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(19,32,51,.08);
+  border:none;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+}
+.admin-badge{
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:700;
+  background:rgba(14,124,134,.15);
+  color:var(--accent);
+  vertical-align:middle;
+}
+.admin-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(19,32,51,.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:20;
+}
+.admin-modal.active{display:flex;}
+.admin-card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+  width:100%;
+  max-width:360px;
+  display:grid;
+  gap:12px;
+}
+.admin-actions{display:flex;gap:10px;}
+.admin-actions button{flex:1;}
+.admin-ghost{background:rgba(19,32,51,.06);color:var(--ink);}
 
 .wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
 .hero{
@@ -114,6 +158,7 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
       <a href="index.html">Oversigt</a>
       <a class="primary" href="signup.html">Tilmeld deltager</a>
       <a href="donate.html">Donér beløb</a>
+      <button class="admin-btn" id="adminButton" type="button">Admin<span class="admin-badge" id="adminStatus" style="display:none;">OK</span></button>
     </div>
   </div>
 </header>
@@ -145,9 +190,26 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
   </section>
 </main>
 
+<div class="admin-modal" id="adminModal" aria-hidden="true">
+  <div class="admin-card">
+    <h3>Admin login</h3>
+    <label for="adminPassword">Kode</label>
+    <input type="password" id="adminPassword" placeholder="Indtast kode">
+    <div class="help" id="adminStatusText"></div>
+    <div class="admin-actions">
+      <button class="btn primary" id="adminLogin" type="button">Log ind</button>
+      <button class="btn admin-ghost" id="adminCancel" type="button">Annuller</button>
+    </div>
+    <button class="btn ghost" id="adminLogout" type="button">Log ud</button>
+  </div>
+</div>
+
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxIXoS-Xs_1jsE3sVqk_ge_LDC0O9ddpYKMj2xwXawfZtgWdQsC6D4umAzqQcJuKHqC7Q/exec";
+const ADMIN_KEY = "walkathon_admin";
+const ADMIN_CODE = "123";
 let participants = [];
+let isAdmin = false;
 
 async function fetchParticipants(){
   const res = await fetch(`${API_URL}?sheet=Deltagere`);
@@ -163,6 +225,57 @@ function setStatus(message, color){
 
 function nameExists(name){
   return participants.some(p=>p.Navn.toLowerCase() === name.toLowerCase());
+}
+
+function setAdminState(active){
+  isAdmin = active;
+  localStorage.setItem(ADMIN_KEY, active ? "1" : "0");
+  const badge = document.getElementById("adminStatus");
+  badge.style.display = active ? "inline-block" : "none";
+}
+
+function openAdminModal(){
+  const modal = document.getElementById("adminModal");
+  const status = document.getElementById("adminStatusText");
+  const logout = document.getElementById("adminLogout");
+  status.textContent = "";
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  logout.style.display = isAdmin ? "block" : "none";
+  document.getElementById("adminPassword").value = "";
+}
+
+function closeAdminModal(){
+  const modal = document.getElementById("adminModal");
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function initAdmin(){
+  isAdmin = localStorage.getItem(ADMIN_KEY) === "1";
+  setAdminState(isAdmin);
+  document.getElementById("adminButton").addEventListener("click", openAdminModal);
+  document.getElementById("adminCancel").addEventListener("click", closeAdminModal);
+  document.getElementById("adminLogin").addEventListener("click", ()=>{
+    const code = document.getElementById("adminPassword").value.trim();
+    const status = document.getElementById("adminStatusText");
+    if(code === ADMIN_CODE){
+      setAdminState(true);
+      status.textContent = "Admin aktiv";
+      status.style.color = "#0e7c86";
+      closeAdminModal();
+    } else {
+      status.textContent = "Forkert kode";
+      status.style.color = "#b00020";
+    }
+  });
+  document.getElementById("adminLogout").addEventListener("click", ()=>{
+    setAdminState(false);
+    closeAdminModal();
+  });
+  document.getElementById("adminModal").addEventListener("click", e=>{
+    if(e.target.id === "adminModal") closeAdminModal();
+  });
 }
 
 document.getElementById("participantNameSignup").addEventListener("input", e=>{
@@ -201,6 +314,7 @@ document.getElementById("participantSignupForm").addEventListener("submit", asyn
 });
 
 fetchParticipants();
+initAdmin();
 </script>
 </body>
 </html>
