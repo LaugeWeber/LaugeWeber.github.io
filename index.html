@@ -121,6 +121,42 @@ header{
   border:1px solid #d7dfeb;
   font-family:inherit;
 }
+.admin-panel{display:grid;gap:12px;}
+.admin-preview{
+  display:grid;
+  gap:8px;
+  max-height:240px;
+  overflow:auto;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #e4ebf5;
+  background:#f7f9fd;
+}
+.admin-preview .item{display:flex;justify-content:space-between;gap:12px;}
+.admin-muted{color:var(--muted);font-size:.95rem;}
+.avatar{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-right:8px;
+  border:1px solid #d7dfeb;
+  vertical-align:middle;
+}
+.avatar-fallback{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#e9f3f2;
+  color:#0c5660;
+  font-size:.75rem;
+  font-weight:700;
+  margin-right:8px;
+  vertical-align:middle;
+}
 
 .wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px;}
 .hero{
@@ -229,6 +265,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 @media (max-width: 680px){
   .grid{grid-template-columns:1fr;}
   .hero h1{font-size:2.2rem;}
+  .admin-preview{max-height:200px;}
 }
 </style>
 </head>
@@ -349,15 +386,28 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
           <thead><tr><th>Navn</th><th>Distance (km)</th><th>Donation (kr)</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="admin-tools" id="adminTools">
-          <button id="sendDonorEmails" type="button">Send donor-mails</button>
-          <span class="help" id="adminEmailStatus"></span>
-        </div>
       </div>
       <div class="card">
         <h3>Seneste donationer</h3>
         <div class="donation-feed" id="recentDonations"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="adminSection">
+    <div class="section-head">
+      <div>
+        <h2>Admin</h2>
+        <p>Kun synlig, når du er logget ind som admin.</p>
+      </div>
+    </div>
+    <div class="card admin-panel">
+      <div class="admin-tools" id="adminTools">
+        <button id="sendDonorEmails" type="button">Send donor-mails</button>
+        <span class="help" id="adminEmailStatus"></span>
+      </div>
+      <div class="admin-preview" id="adminEmailPreview"></div>
+      <div class="admin-muted" id="adminEmailSummary"></div>
     </div>
   </section>
 </main>
@@ -412,6 +462,23 @@ function calculateDonationForParticipant(name, distance){
         + Number(d.FastBeløb||0)
         + Number(d.BeløbPrKm||0)*distance;
     },0);
+}
+
+function getInitials(name){
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if(parts.length === 0) return "?";
+  if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function renderAvatar(name, url){
+  if(url){
+    const safeUrl = String(url).trim();
+    if(safeUrl){
+      return `<img class="avatar" src="${safeUrl}" alt="${name}">`;
+    }
+  }
+  return `<span class="avatar-fallback">${getInitials(name)}</span>`;
 }
 
 /* ADMIN */
@@ -508,7 +575,7 @@ function updateParticipants(){
       ? `<input class="distance-input" type="number" step="0.1" min="0" value="${Number(p.Distance).toFixed(1)}" data-name="${p.Navn}">`
       : `${Number(p.Distance).toFixed(1)}`;
     row.innerHTML=`
-      <td>${p.Navn}</td>
+      <td>${renderAvatar(p.Navn, p.Avatar)}${p.Navn}</td>
       <td>${distanceCell}</td>
       <td>${p.donation.toFixed(0)}</td>
     `;
@@ -530,6 +597,50 @@ function updateParticipants(){
       });
     });
   }
+}
+
+function buildDonorTotals(){
+  const totals = {};
+  donors.forEach(d=>{
+    const key = (d.Email || d.Telefon || d.Navn || "ukendt").toString();
+    const amount =
+      Number(d.FastBeløb||0) +
+      Number(d.BeløbPrKm||0) * (participants.find(p=>p.Navn===d.Modtager)?.Distance||0);
+    if(!totals[key]){
+      totals[key] = { navn:d.Navn || "Donor", email:d.Email || "", total:0 };
+    }
+    totals[key].total += amount;
+  });
+  return Object.values(totals).sort((a,b)=>b.total-a.total);
+}
+
+function updateAdminPreview(){
+  const preview = document.getElementById("adminEmailPreview");
+  const summary = document.getElementById("adminEmailSummary");
+  if(!isAdmin){
+    preview.innerHTML = "";
+    summary.textContent = "";
+    return;
+  }
+
+  const totals = buildDonorTotals();
+  const totalAmount = totals.reduce((sum, d)=>sum + d.total, 0);
+  if(totals.length === 0){
+    preview.innerHTML = '<div class="admin-muted">Ingen donatorer endnu.</div>';
+    summary.textContent = "";
+    return;
+  }
+
+  preview.innerHTML = "";
+  totals.slice(0, 12).forEach(d=>{
+    const item = document.createElement("div");
+    item.className = "item";
+    const label = d.email ? `${d.navn} (${d.email})` : d.navn;
+    item.innerHTML = `<span>${label}</span><strong>${d.total.toFixed(0)} kr</strong>`;
+    preview.appendChild(item);
+  });
+
+  summary.textContent = `Total: ${totalAmount.toFixed(0)} kr fra ${totals.length} donatorer.`;
 }
 
 /* UPDATE TOTALS */
@@ -635,6 +746,7 @@ function updateAll(){
   updateLeaderboards();
   updateTotals();
   updateRecentDonations();
+  updateAdminPreview();
 }
 
 document.getElementById("participantSearch").addEventListener("input", e=>{
@@ -654,7 +766,8 @@ document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
   status.textContent = "Sender mails...";
   status.style.color = "";
   try{
-    const res = await fetch(`${API_URL}?action=${EMAIL_ACTION}`, { method:"POST" });
+    const url = `${API_URL}?action=${EMAIL_ACTION}`;
+    const res = await fetch(url, { method:"POST" });
     const data = await res.json().catch(()=>null);
     if(res.ok){
       status.textContent = data?.message || "Mails sendt.";
@@ -664,8 +777,14 @@ document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
       status.style.color = "#b00020";
     }
   } catch (err){
-    status.textContent = "Netvaerksfejl ved afsendelse.";
-    status.style.color = "#b00020";
+    try{
+      await fetch(`${API_URL}?action=${EMAIL_ACTION}`, { method:"GET", mode:"no-cors" });
+      status.textContent = "Sendt (ingen svar muligt).";
+      status.style.color = "#0e7c86";
+    } catch (fallbackErr){
+      status.textContent = "Netvaerksfejl ved afsendelse.";
+      status.style.color = "#b00020";
+    }
   }
 });
 

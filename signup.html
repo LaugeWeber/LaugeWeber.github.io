@@ -128,6 +128,7 @@ input{
   font-family:inherit;
   background:#fff;
 }
+input[type="url"]::placeholder{color:#9aa7bd;}
 input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
 .btn{
   border:none;
@@ -174,6 +175,11 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
           <input type="text" id="participantNameSignup" placeholder="Fx Mia Jensen" required>
           <div class="help" id="nameHint">Brug fuldt navn, så det er let at finde.</div>
           <div class="status" id="formStatus"></div>
+        </div>
+        <div>
+          <label for="participantAvatar">Avatar (valgfri)</label>
+          <input type="url" id="participantAvatar" placeholder="https://...">
+          <div class="help">Indsæt et link til et lille billede (fx 200x200).</div>
         </div>
         <button class="btn primary" type="submit">Tilmeld deltager</button>
       </form>
@@ -294,6 +300,7 @@ document.getElementById("participantNameSignup").addEventListener("input", e=>{
 document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();
+  const avatar = document.getElementById("participantAvatar").value.trim();
   if(!name){
     setStatus("Udfyld navn for at fortsætte.", "#b00020");
     return;
@@ -305,11 +312,12 @@ document.getElementById("participantSignupForm").addEventListener("submit", asyn
 
   await fetch(`${API_URL}?sheet=Deltagere`, {
     method:"POST",
-    body:JSON.stringify({Navn:name, Distance:0})
+    body:JSON.stringify({Navn:name, Distance:0, Avatar:avatar})
   });
 
   setStatus("Deltager tilføjet!", "#0e7c86");
   document.getElementById("participantNameSignup").value="";
+  document.getElementById("participantAvatar").value="";
   fetchParticipants();
 });
 
