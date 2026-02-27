@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>4. Maj Walkathon</title>
 <style>
-@import url("https://script.google.com/macros/s/AKfycbzlIS9ViFV8vsn9eZ4LA0KdGW_LMLNFvuZydf_iIuK43ZtKIBs5DmTwCOe510VG9LBCLQ/exec");
+@import url("https://script.google.com/macros/s/AKfycbyMIEA9-czRl05M0jrbRdAFCOJWYZ3J1YtwskSfoQaQ5HJOiZno-OwkjnqE4QekCBXXVA/exec");
 :root{
   --bg:#f3f6fb;
   --panel:#ffffff;
@@ -765,24 +765,36 @@ document.getElementById("sendDonorEmails").addEventListener("click", async ()=>{
   if(!confirm("Send mail til alle donatorer nu?")) return;
   status.textContent = "Sender mails...";
   status.style.color = "";
+  
   try{
     const url = `${API_URL}?action=${EMAIL_ACTION}`;
-    const res = await fetch(url, { method:"POST" });
+    console.log("Sending to:", url);
+    
+    const res = await fetch(url, { 
+      method:"POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    console.log("Response status:", res.status);
     const data = await res.json().catch(()=>null);
-    if(res.ok){
-      status.textContent = data?.message || "Mails sendt.";
+    console.log("Response data:", data);
+    
+    if(res.ok && data?.ok){
+      status.textContent = data?.message || "Mails sendt!";
       status.style.color = "#0e7c86";
     } else {
-      status.textContent = "Kunne ikke sende mails.";
+      status.textContent = `Fejl: ${data?.message || "Kunne ikke sende"}`;
       status.style.color = "#b00020";
     }
   } catch (err){
+    console.error("Email send error:", err);
     try{
-      await fetch(`${API_URL}?action=${EMAIL_ACTION}`, { method:"GET", mode:"no-cors" });
-      status.textContent = "Sendt (ingen svar muligt).";
-      status.style.color = "#0e7c86";
+      const fallbackUrl = `${API_URL}?action=${EMAIL_ACTION}`;
+      await fetch(fallbackUrl, { method:"GET", mode:"no-cors" });
+      status.textContent = "Anmodning sendt (kan ikke bekræfte)";
+      status.style.color = "#f2b705";
     } catch (fallbackErr){
-      status.textContent = "Netvaerksfejl ved afsendelse.";
+      status.textContent = `Netværksfejl: ${err.message}. Tjek at Web App er deployed korrekt.`;
       status.style.color = "#b00020";
     }
   }
