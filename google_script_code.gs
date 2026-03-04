@@ -259,9 +259,6 @@ function validateDeltagereData(data) {
     throw new Error("Ugyldig distance værdi");
   }
   
-  if (data.Avatar && typeof data.Avatar === 'string' && data.Avatar.length > 500) {
-    throw new Error("Avatar URL må max være 500 tegn");
-  }
 }
 
 function validateDonationerData(data) {
@@ -364,7 +361,6 @@ function writeToDeltagere(data) {
     
     const navn = data.Navn.trim();
     const distance = Number(data.Distance || 0);
-    const avatar = (data.Avatar || "").trim();
     
     // Tjek for duplikater
     const lastRow = sheet.getLastRow();
@@ -374,16 +370,13 @@ function writeToDeltagere(data) {
       if (existing[i][0].toString().toLowerCase() === navn.toLowerCase()) {
         // Opdater eksisterende
         sheet.getRange(i + 1, 2).setValue(distance);
-        if (avatar) {
-          sheet.getRange(i + 1, 3).setValue(avatar);
-        }
         Logger.log("Updated existing participant: " + navn);
         return;
       }
     }
     
     // Tilføj ny række
-    sheet.appendRow([navn, distance, avatar]);
+    sheet.appendRow([navn, distance]);
     Logger.log("Added new participant: " + navn);
     
   } finally {
@@ -730,7 +723,7 @@ FØR DEPLOYMENT TIL PRODUKTION:
    
 5. OPSÆT GOOGLE SHEETS:
    Ark: "Deltagere"
-   - Kolonner: Navn, Distance, Avatar
+  - Kolonner: Navn, Distance
    
    Ark: "Donationer"
    - Kolonner: Telefon, Email, Navn, Modtager, FastBeløb, BeløbPrKm, Besked, MailSendt

@@ -143,6 +143,24 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
 
 .tips{display:grid;gap:10px;list-style:none;margin-top:16px;}
 .tips li{background:#f7f9fd;border:1px solid #e4ebf5;padding:10px 12px;border-radius:12px;}
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:var(--accent);
+  color:#fff;
+  padding:12px 16px;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  font-weight:700;
+  z-index:9999;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity .2s ease, transform .2s ease;
+}
+.toast.success{background:var(--accent);}
+.toast.error{background:#b00020;}
+.toast.show{opacity:1;transform:translateY(0);}
 
 @media (max-width: 900px){
   .hero{grid-template-columns:1fr;}
@@ -175,11 +193,6 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
           <div class="help" id="nameHint">Brug fuldt navn, så det er let at finde.</div>
           <div class="status" id="formStatus"></div>
         </div>
-        <div>
-          <label for="participantAvatar">Avatar (valgfri)</label>
-          <input type="url" id="participantAvatar" placeholder="https://...">
-          <div class="help">Indsæt et link til et lille billede (fx 200x200).</div>
-        </div>
         <button class="btn primary" type="submit">Tilmeld deltager</button>
       </form>
     </div>
@@ -210,7 +223,7 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbykxHspKCofhwKZla9Iigx35qS1rvtQ6QK6p8-yvqmawVvNvpjd7WSG1fTxO_eItfX92Q/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyU5pWH_MpX-UwicxEgAu7R1BVm2FxKNzPABLkF_V5ad_trScsQnuD1l6ef9mA0zlbTkQ/exec";
 const ADMIN_KEY = "walkathon_admin";
 const ADMIN_CODE = "123";
 let participants = [];
@@ -226,6 +239,21 @@ function setStatus(message, color){
   const status = document.getElementById("formStatus");
   status.textContent = message;
   status.style.color = color;
+}
+
+function showToast(message, type="success"){
+  const existing = document.querySelector(".toast");
+  if(existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  const icon = type === "error" ? "⚠️" : "✅";
+  toast.textContent = `${icon} ${message}`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=>toast.classList.add("show"));
+  setTimeout(()=>{
+    toast.classList.remove("show");
+    setTimeout(()=>toast.remove(), 220);
+  }, 1400);
 }
 
 function nameExists(name){
@@ -299,25 +327,37 @@ document.getElementById("participantNameSignup").addEventListener("input", e=>{
 document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();
-  const avatar = document.getElementById("participantAvatar").value.trim();
   if(!name){
     setStatus("Udfyld navn for at fortsætte.", "#b00020");
+    showToast("Udfyld navn for at fortsætte", "error");
     return;
   }
   if(nameExists(name)){
     setStatus("Navnet findes allerede. Vælg et andet.", "#b00020");
+    showToast("Navnet findes allerede", "error");
     return;
   }
 
-  await fetch(`${API_URL}?sheet=Deltagere`, {
-    method:"POST",
-    body:JSON.stringify({Navn:name, Distance:0, Avatar:avatar})
-  });
+  try {
+    const res = await fetch(`${API_URL}?sheet=Deltagere`, {
+      method:"POST",
+      body:JSON.stringify({Navn:name, Distance:0})
+    });
 
-  setStatus("Deltager tilføjet!", "#0e7c86");
-  document.getElementById("participantNameSignup").value="";
-  document.getElementById("participantAvatar").value="";
-  fetchParticipants();
+    const data = await res.json().catch(()=>null);
+    if(!res.ok || data?.ok === false){
+      throw new Error(data?.message || "Kunne ikke tilføje deltager.");
+    }
+
+    setStatus("Deltager tilføjet! Sender dig til forsiden...", "#0e7c86");
+    showToast("Tilmelding registreret", "success");
+    setTimeout(()=>{
+      window.location.href = "index.html";
+    }, 1100);
+  } catch (err) {
+    setStatus(err.message || "Netværksfejl. Prøv igen.", "#b00020");
+    showToast(err.message || "Netværksfejl. Prøv igen.", "error");
+  }
 });
 
 fetchParticipants();
