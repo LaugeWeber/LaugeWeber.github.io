@@ -167,8 +167,8 @@ function handleRequest(e) {
       });
     }
     
-    // READ SHEET DATA (public)
-    if (sheet === "Deltagere" || sheet === "Donationer") {
+    // READ SHEET DATA (public, GET only)
+    if (!e.postData && (sheet === "Deltagere" || sheet === "Donationer")) {
       const data = readSheet(sheet);
       Logger.log("Read " + data.length + " rows from " + sheet);
       return jsonResponse(data);
