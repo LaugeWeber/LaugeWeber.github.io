@@ -305,7 +305,10 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
   <section class="grid stagger">
     <div class="card stat">
       <span>Total donation</span>
-      <strong id="totalDonation">0</strong>
+      <strong id="totalDonationActual">0</strong>
+      <div style="font-size:.9rem;color:var(--muted);margin-top:6px;">
+        Potentiel samlet: <strong id="totalDonationPotential">0</strong> kr
+      </div>
       <span>kr lige nu</span>
     </div>
     <div class="card stat">
@@ -335,7 +338,11 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
     <div class="progress-grid">
       <div class="card">
         <h3>Indsamling</h3>
-        <div class="progress-meta"><span id="donationProgressLabel">0 / 0 kr</span></div>
+          <div class="progress-meta">
+            <div style="font-weight:700;margin-bottom:6px;">Mål: Leje af fælles sauna — 10.000 kr</div>
+            <span id="donationProgressLabel">0 / 0 kr</span>
+            <div style="font-size:.85rem;color:var(--muted);margin-top:6px;">Potentiel: <span id="donationPotentialLabel">0 kr</span></div>
+          </div>
         <div class="progress-bar"><span id="donationProgressBar"></span></div>
       </div>
       <div class="card">
@@ -434,12 +441,12 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbyU5pWH_MpX-UwicxEgAu7R1BVm2FxKNzPABLkF_V5ad_trScsQnuD1l6ef9mA0zlbTkQ/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbxevIdifUMUg1KWT6a8nw_-djWK_euUvVS8aAQUtf5pI_zBvXPKK4zm3aOKoZrkR3Enbw/exec";
 const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
 const GOAL_DISTANCE=250;
-const GOAL_DONATION=20000;
+const GOAL_DONATION=10000; // Mål: leje af fælles sauna
 let participants=[];
 let donors=[];
 let isAdmin=false;
@@ -460,12 +467,26 @@ async function fetchDonors(){
 
 /* BEREGN DONATION FOR EN DELTAGER */
 function calculateDonationForParticipant(name, distance){
+  // Actual: only count donation if threshold (ThresholdKm) is 0 or reached
   return donors
     .filter(d=>d.Modtager===name)
     .reduce((sum,d)=>{
-      return sum 
-        + Number(d.FastBeløb||0)
-        + Number(d.BeløbPrKm||0)*distance;
+      const flat = Number(d.FastBeløb || 0);
+      const perKm = Number(d.BeløbPrKm || 0);
+      const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+      if (threshold > 0 && distance < threshold) return sum; // not triggered
+      return sum + flat + perKm * distance;
+    },0);
+}
+
+function calculatePotentialDonationForParticipant(name, distance){
+  // Potential: count all donations (ignore thresholds) using current distance
+  return donors
+    .filter(d=>d.Modtager===name)
+    .reduce((sum,d)=>{
+      const flat = Number(d.FastBeløb || 0);
+      const perKm = Number(d.BeløbPrKm || 0);
+      return sum + flat + perKm * distance;
     },0);
 }
 
@@ -644,13 +665,17 @@ function updateAdminPreview(){
 /* UPDATE TOTALS */
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
-  const totalDonation = participants.reduce((sum,p)=>{
+  const totalDonationActual = participants.reduce((sum,p)=>{
     return sum + calculateDonationForParticipant(p.Navn, p.Distance);
+  },0);
+  const totalDonationPotential = participants.reduce((sum,p)=>{
+    return sum + calculatePotentialDonationForParticipant(p.Navn, p.Distance);
   },0);
   const donorsUnique = new Set(donors.map(d=>d.Telefon)).size;
 
   document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
-  document.getElementById("totalDonation").textContent = totalDonation.toFixed(0);
+  document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0);
+  document.getElementById("totalDonationPotential").textContent = totalDonationPotential.toFixed(0);
   document.getElementById("totalParticipants").textContent = participants.length;
   document.getElementById("totalDonors").textContent = donorsUnique;
 
@@ -658,7 +683,8 @@ function updateTotals(){
   const distanceProgress = Math.min(100, (totalDistance/GOAL_DISTANCE)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
-  document.getElementById("donationProgressLabel").textContent = `${totalDonation.toFixed(0)} / ${GOAL_DONATION} kr`;
+  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
+  document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)} kr`;
   document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${GOAL_DISTANCE} km`;
 }
 

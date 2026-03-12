@@ -300,6 +300,12 @@ select option[disabled]{color:#999;}
         </div>
 
         <div class="field">
+          <label for="sponsorThreshold">Betal kun hvis deltager går mindst (km)</label>
+          <input type="number" id="sponsorThreshold" min="0" step="0.1" placeholder="Fx 5.0">
+          <div class="help">Hvis sat, betales kun når deltager har nået denne distance.</div>
+        </div>
+
+        <div class="field">
           <label for="sponsorMessage">Besked til deltager (valgfri)</label>
           <textarea id="sponsorMessage" rows="3" placeholder="Skriv en kort hilsen..."></textarea>
         </div>
@@ -323,6 +329,7 @@ select option[disabled]{color:#999;}
         <div class="line"><span>Distance (km)</span><strong id="summaryDistance">0.0</strong></div>
         <div class="line"><span>Engangsbeløb</span><strong id="summaryFlat">0</strong></div>
         <div class="line"><span>Beløb pr. km</span><strong id="summaryPerKm">0</strong></div>
+        <div class="line"><span>Tærskel (km)</span><strong id="summaryThreshold">-</strong></div>
         <div class="line"><span>Estimat (nu)</span><strong id="summaryTotal">0</strong></div>
         <div class="help">Estimatet beregnes ud fra deltagerens nuværende distance.</div>
       </div>
@@ -348,7 +355,7 @@ select option[disabled]{color:#999;}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyU5pWH_MpX-UwicxEgAu7R1BVm2FxKNzPABLkF_V5ad_trScsQnuD1l6ef9mA0zlbTkQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxevIdifUMUg1KWT6a8nw_-djWK_euUvVS8aAQUtf5pI_zBvXPKK4zm3aOKoZrkR3Enbw/exec";
 const ADMIN_KEY = "walkathon_admin";
 const ADMIN_CODE = "123";
 let participants = [];
@@ -395,9 +402,11 @@ function calculateDonationForParticipant(name, distance){
   return donors
     .filter(d=>d.Modtager===name)
     .reduce((sum,d)=>{
-      return sum
-        + Number(d.FastBeløb||0)
-        + Number(d.BeløbPrKm||0)*distance;
+      const flat = Number(d.FastBeløb || 0);
+      const perKm = Number(d.BeløbPrKm || 0);
+      const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+      if (threshold > 0 && distance < threshold) return sum; // not triggered
+      return sum + flat + perKm * distance;
     },0);
 }
 
@@ -406,12 +415,15 @@ function updateSummary(){
   const distance = name === "-" ? 0 : getRecipientDistance(name);
   const flat = Number(document.getElementById("sponsorFlat").value || 0);
   const perKm = Number(document.getElementById("sponsorPerKm").value || 0);
-  const total = flat + perKm * distance;
+  const threshold = Number(document.getElementById("sponsorThreshold").value || 0);
+  const triggered = threshold > 0 ? distance >= threshold : true;
+  const total = triggered ? (flat + perKm * distance) : 0;
 
   document.getElementById("summaryName").textContent = name;
   document.getElementById("summaryDistance").textContent = distance.toFixed(1);
   document.getElementById("summaryFlat").textContent = flat.toFixed(0);
   document.getElementById("summaryPerKm").textContent = perKm.toFixed(0);
+  document.getElementById("summaryThreshold").textContent = threshold > 0 ? threshold.toFixed(1) : "-";
   document.getElementById("summaryTotal").textContent = total.toFixed(0);
 
   updateSpotlight(name, distance);
@@ -430,7 +442,8 @@ function updateRecentDonations(){
     item.className = "recent-item";
     const flat = Number(d.FastBeløb || 0);
     const perKm = Number(d.BeløbPrKm || 0);
-    item.textContent = `${d.Navn} -> ${d.Modtager}: ${flat.toFixed(0)} kr + ${perKm.toFixed(0)} kr/km`;
+    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+    item.textContent = `${d.Navn} -> ${d.Modtager}: ${flat.toFixed(0)} kr + ${perKm.toFixed(0)} kr/km${threshold>0 ? ' — kun hvis ≥' + threshold + ' km' : ''}`;
     list.appendChild(item);
   });
 }
@@ -572,6 +585,7 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   const recipient = document.getElementById("sponsorRecipient").value;
   const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
   const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
+  const threshold = parseFloat(document.getElementById("sponsorThreshold").value)||0;
   const message = document.getElementById("sponsorMessage").value.trim();
 
   if(!phone || !email || !name || !recipient || (flat<=0 && perKm<=0)){
@@ -589,7 +603,8 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
     Modtager: recipient,
     FastBeløb: flat,
     BeløbPrKm: perKm,
-    Besked: message
+    Besked: message,
+    ThresholdKm: threshold
   };
 
   try {

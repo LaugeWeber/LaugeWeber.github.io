@@ -14,9 +14,17 @@
 /*************** KONFIGURATION ****************/
 
 const MOBILEPAY_NUMMER = "123456";
-const TEST_MODE = true;
+const TEST_MODE = false;
 const TEST_EMAIL = "laugelweber@gmail.com";
 const ADMIN_CODE = "123"; // VIGTIGT: Skift til et sikkert password i produktion!
+
+// EVENT CONFIGURATION (used for signup confirmation calendar link)
+const EVENT_TITLE = "4. Maj Walkathon";
+const EVENT_START_ISO = "2026-06-20T16:00:00"; // lørdag d. 20/6 kl. 16
+const EVENT_END_ISO = "2026-06-21T16:00:00";   // søndag d. 21/6 kl. 16
+const EVENT_LOCATION = "4. Maj Kollegiet";
+const EVENT_DESCRIPTION = "Kom og gå med til 4. Maj Walkathon — vi samler ind til fælles sauna!";
+const EVENT_TIMEZONE = "Europe/Copenhagen";
 
 // Email rate limits (Google Apps Script)
 const MAX_EMAILS_PER_DAY = 100; // Juster efter dit account type
@@ -186,6 +194,14 @@ function handleRequest(e) {
         validateDeltagereData(payload);
         writeToDeltagere(payload);
         Logger.log("Participant added: " + payload.Navn);
+        // Send signup confirmation email with calendar link (best effort)
+        try {
+          if (payload.Email) {
+            sendSignupConfirmationEmail(payload.Email, payload.Navn);
+          }
+        } catch (mailErr) {
+          Logger.log("ERROR sending signup email: " + mailErr.toString());
+        }
         return jsonResponse({ 
           ok: true, 
           message: "Deltager tilføjet",
@@ -258,6 +274,14 @@ function validateDeltagereData(data) {
   if (isNaN(distance) || distance < 0) {
     throw new Error("Ugyldig distance værdi");
   }
+
+  // Email is optional for generic writes, but if present must be valid
+  if (data.Email) {
+    if (typeof data.Email !== 'string') throw new Error("Ugyldig email");
+    const emailTrim = data.Email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrim)) throw new Error("Ugyldig email adresse");
+  }
   
 }
 
@@ -306,6 +330,12 @@ function validateDonationerData(data) {
   
   if (fastBeløb === 0 && beløbPrKm === 0) {
     throw new Error("Mindst ét beløb skal være større end 0");
+  }
+  
+  // Threshold (optional) - donor can set a distance threshold for the pledge
+  const threshold = Number(data.ThresholdKm || 0);
+  if (isNaN(threshold) || threshold < 0) {
+    throw new Error("Ugyldig tærskelværdi");
   }
   
   // Besked er optional, men tjek længde
@@ -361,6 +391,7 @@ function writeToDeltagere(data) {
     
     const navn = data.Navn.trim();
     const distance = Number(data.Distance || 0);
+    const email = (data.Email || "").toString().trim();
     
     // Tjek for duplikater
     const lastRow = sheet.getLastRow();
@@ -375,8 +406,8 @@ function writeToDeltagere(data) {
       }
     }
     
-    // Tilføj ny række
-    sheet.appendRow([navn, distance]);
+    // Tilføj ny række (tilføjer valgfri Email i 3. kolonne)
+    sheet.appendRow([navn, distance, email]);
     Logger.log("Added new participant: " + navn);
     
   } finally {
@@ -405,6 +436,7 @@ function writeToDonationer(data) {
       Number(data.FastBeløb || 0),
       Number(data.BeløbPrKm || 0),
       (data.Besked || "").trim(),
+      Number(data.ThresholdKm || 0),
       "" // MailSendt kolonne
     ]);
     
@@ -481,23 +513,34 @@ function sendAggregatedPaymentEmails() {
     // Group by donor email
     const donorMap = {};
     
+    // Map header names to indices for robustness (supports new ThresholdKm column)
+    const idxTelefon = headers.indexOf("Telefon");
+    const idxEmail = headers.indexOf("Email");
+    const idxDonorNavn = headers.indexOf("Navn");
+    const idxModtager = headers.indexOf("Modtager");
+    const idxFast = headers.indexOf("FastBeløb");
+    const idxPerKm = headers.indexOf("BeløbPrKm");
+    const idxBesked = headers.indexOf("Besked");
+    const idxThreshold = headers.indexOf("ThresholdKm");
+
     for (let i = 1; i < donationerData.length; i++) {
-      if (donationerData[i][mailSendtIndex] === "JA") {
-        continue; // Skip already sent
-      }
-      
-      const telefon = donationerData[i][0];
-      const mail = donationerData[i][1];
-      const donorNavn = donationerData[i][2];
-      const modtager = donationerData[i][3];
-      const fastBeløb = Number(donationerData[i][4] || 0);
-      const beløbPrKm = Number(donationerData[i][5] || 0);
-      
+      const row = donationerData[i];
+      const mailSentFlag = (mailSendtIndex !== -1) ? row[mailSendtIndex] : "";
+      if (mailSentFlag === "JA") continue; // Skip already sent
+
+      const telefon = idxTelefon !== -1 ? row[idxTelefon] : "";
+      const mail = idxEmail !== -1 ? row[idxEmail] : "";
+      const donorNavn = idxDonorNavn !== -1 ? row[idxDonorNavn] : "";
+      const modtager = idxModtager !== -1 ? row[idxModtager] : "";
+      const fastBeløb = idxFast !== -1 ? Number(row[idxFast] || 0) : 0;
+      const beløbPrKm = idxPerKm !== -1 ? Number(row[idxPerKm] || 0) : 0;
+      const threshold = idxThreshold !== -1 ? Number(row[idxThreshold] || 0) : 0;
+
       if (!mail) {
         Logger.log("Skipping row " + (i + 1) + " - no email");
         continue;
       }
-      
+
       if (!donorMap[mail]) {
         donorMap[mail] = {
           navn: donorNavn,
@@ -506,12 +549,13 @@ function sendAggregatedPaymentEmails() {
           donationer: []
         };
       }
-      
+
       donorMap[mail].rows.push(i + 1);
       donorMap[mail].donationer.push({
         modtager: modtager,
         fastBeløb: fastBeløb,
-        beløbPrKm: beløbPrKm
+        beløbPrKm: beløbPrKm,
+        threshold: threshold
       });
     }
     
@@ -521,7 +565,8 @@ function sendAggregatedPaymentEmails() {
       const donor = donorMap[mail];
       donor.donationer.forEach(d => {
         const distance = distanceMap[d.modtager] || 0;
-        const amount = round2(d.fastBeløb + d.beløbPrKm * distance);
+        const triggered = d.threshold > 0 ? distance >= d.threshold : true;
+        const amount = triggered ? round2(d.fastBeløb + d.beløbPrKm * distance) : 0;
         totalEventSum += amount;
       });
     }
@@ -562,17 +607,19 @@ function sendAggregatedPaymentEmails() {
       
       donor.donationer.forEach(d => {
         const distance = distanceMap[d.modtager] || 0;
-        const amount = round2(d.fastBeløb + d.beløbPrKm * distance);
-        
+        const triggered = d.threshold > 0 ? distance >= d.threshold : true;
+        const amount = triggered ? round2(d.fastBeløb + d.beløbPrKm * distance) : 0;
+
         totalDonorAmount += amount;
         totalDistanceForDonor += distance;
-        
+
         rowsHtml += `
           <tr>
             <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(d.modtager)}</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${distance.toFixed(1)} km</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${d.fastBeløb.toFixed(0)} kr</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${d.beløbPrKm.toFixed(0)} kr</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${d.threshold > 0 ? 'Kun hvis ≥ ' + d.threshold + ' km' : ''}</td>
             <td style="padding: 8px; border: 1px solid #ddd;"><strong>${amount.toFixed(0)} kr</strong></td>
           </tr>
         `;
@@ -698,6 +745,90 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+// Build a Google Calendar "TEMPLATE" link for adding the event to a user's calendar
+function formatDateForCalendar(dateObj) {
+  // Returns UTC timestamp in format YYYYMMDDTHHMMSSZ
+  const y = dateObj.getUTCFullYear();
+  const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getUTCDate()).padStart(2, '0');
+  const hh = String(dateObj.getUTCHours()).padStart(2, '0');
+  const mm = String(dateObj.getUTCMinutes()).padStart(2, '0');
+  const ss = String(dateObj.getUTCSeconds()).padStart(2, '0');
+  return `${y}${m}${d}T${hh}${mm}${ss}Z`;
+}
+
+function buildGoogleCalendarLink(title, startIso, endIso, details, location) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const startFmt = formatDateForCalendar(start);
+  const endFmt = formatDateForCalendar(end);
+  const base = 'https://www.google.com/calendar/render?action=TEMPLATE';
+  const params = [];
+  params.push('text=' + encodeURIComponent(title));
+  params.push('dates=' + encodeURIComponent(startFmt + '/' + endFmt));
+  if (details) params.push('details=' + encodeURIComponent(details));
+  if (location) params.push('location=' + encodeURIComponent(location));
+  params.push('trp=false');
+  return base + '&' + params.join('&');
+}
+
+function sendSignupConfirmationEmail(email, name) {
+  const subject = TEST_MODE ? '[TEST] Tilmelding modtaget – 4. Maj Walkathon' : 'Tilmelding modtaget – 4. Maj Walkathon';
+
+  const calendarLink = buildGoogleCalendarLink(EVENT_TITLE, EVENT_START_ISO, EVENT_END_ISO, EVENT_DESCRIPTION, EVENT_LOCATION) + '&ctz=' + encodeURIComponent(EVENT_TIMEZONE);
+
+  const htmlBody = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width:600px;">
+      ${TEST_MODE ? `<div style="background:#ff9800;color:white;padding:10px;border-radius:8px;text-align:center;font-weight:bold;">⚠️ TEST MODE - Denne email sendes kun til testadresse</div>` : ''}
+      <h2 style="color:#0e7c86;">Tak for din tilmelding, ${escapeHtml(name)}!</h2>
+      <p>Du er nu tilmeldt <strong>${escapeHtml(EVENT_TITLE)}</strong>.</p>
+      <p>${escapeHtml(EVENT_DESCRIPTION)}</p>
+      <p><strong>Hvornår:</strong> ${EVENT_START_ISO.replace('T',' ')} – ${EVENT_END_ISO.replace('T',' ')}</p>
+      <p><strong>Hvor:</strong> ${escapeHtml(EVENT_LOCATION)}</p>
+      <p style="margin-top:16px;">Klik på linket herunder for at føje begivenheden til din Google Kalender:</p>
+      <p><a href="${calendarLink}" style="display:inline-block;padding:12px 16px;background:#0e7c86;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Tilføj til Google Kalender</a></p>
+      <p style="margin-top:18px;color:#666;">Du kan også importere vedhæftede kalenderfil (.ics) for automatisk at få en påmindelse 2 uger før.</p>
+      <p style="margin-top:24px;">Med venlig hilsen<br><strong>Walkathon-teamet</strong></p>
+    </div>
+  `;
+
+  // Build ICS content with VALARM (2 weeks before)
+  const uid = Utilities.getUuid();
+  const dtstamp = formatDateForCalendar(new Date());
+  const dtstart = formatDateForCalendar(new Date(EVENT_START_ISO));
+  const dtend = formatDateForCalendar(new Date(EVENT_END_ISO));
+  const safeDescription = (EVENT_DESCRIPTION || '').toString().replace(/\r?\n/g, '\\n').replace(/[,;\\]/g, ' ');
+
+  const icsLines = [
+    'BEGIN:VCALENDAR',
+    'PRODID:-//4. Maj Walkathon//EN',
+    'VERSION:2.0',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    'UID:' + uid,
+    'DTSTAMP:' + dtstamp,
+    'DTSTART:' + dtstart,
+    'DTEND:' + dtend,
+    'SUMMARY:' + EVENT_TITLE,
+    'DESCRIPTION:' + safeDescription,
+    'LOCATION:' + EVENT_LOCATION,
+    'BEGIN:VALARM',
+    'TRIGGER:-P14D',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Påmindelse: ' + EVENT_TITLE,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+
+  const icsContent = icsLines.join('\r\n');
+  const icsBlob = Utilities.newBlob(icsContent, 'text/calendar', '4maj-walkathon.ics');
+
+  const recipient = TEST_MODE ? TEST_EMAIL : email;
+  GmailApp.sendEmail(recipient, subject, 'Se HTML-version af denne email i din email klient.', { htmlBody: htmlBody, name: '4. Maj Walkathon', attachments: [icsBlob] });
+  Logger.log('Signup confirmation email queued for: ' + (TEST_MODE ? TEST_EMAIL + ' (test for ' + email + ')' : email));
 }
 
 /*************** DEPLOYMENT CHECKLIST ****************/

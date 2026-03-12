@@ -190,6 +190,8 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
         <div>
           <label for="participantNameSignup">Deltagerens navn</label>
           <input type="text" id="participantNameSignup" placeholder="Fx Mia Jensen" required>
+          <label for="participantEmailSignup">Email (for bekræftelse)</label>
+          <input type="email" id="participantEmailSignup" placeholder="fx navn@eksempel.dk" required>
           <div class="help" id="nameHint">Brug fuldt navn, så det er let at finde.</div>
           <div class="status" id="formStatus"></div>
         </div>
@@ -223,7 +225,7 @@ input:focus{outline:2px solid var(--ring);border-color:var(--accent);}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyU5pWH_MpX-UwicxEgAu7R1BVm2FxKNzPABLkF_V5ad_trScsQnuD1l6ef9mA0zlbTkQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxevIdifUMUg1KWT6a8nw_-djWK_euUvVS8aAQUtf5pI_zBvXPKK4zm3aOKoZrkR3Enbw/exec";
 const ADMIN_KEY = "walkathon_admin";
 const ADMIN_CODE = "123";
 let participants = [];
@@ -327,6 +329,7 @@ document.getElementById("participantNameSignup").addEventListener("input", e=>{
 document.getElementById("participantSignupForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const name = document.getElementById("participantNameSignup").value.trim();
+  const email = document.getElementById("participantEmailSignup").value.trim();
   if(!name){
     setStatus("Udfyld navn for at fortsætte.", "#b00020");
     showToast("Udfyld navn for at fortsætte", "error");
@@ -338,10 +341,18 @@ document.getElementById("participantSignupForm").addEventListener("submit", asyn
     return;
   }
 
+  // Basic email check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!email || !emailRegex.test(email)){
+    setStatus("Ugyldig eller manglende email.", "#b00020");
+    showToast("Ugyldig eller manglende email.", "error");
+    return;
+  }
+
   try {
     const res = await fetch(`${API_URL}?sheet=Deltagere`, {
       method:"POST",
-      body:JSON.stringify({Navn:name, Distance:0})
+      body:JSON.stringify({Navn:name, Distance:0, Email: email})
     });
 
     const data = await res.json().catch(()=>null);
