@@ -379,6 +379,20 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
   <section class="section">
     <div class="section-head">
       <div>
+        <h2>Potentielle donationer</h2>
+        <p>Liste over udlovede donationer som endnu ikke er indfriet (sorteret efter største potentiale først).</p>
+      </div>
+    </div>
+    <div class="card">
+      <div id="potentialDonations">
+        <em>Indlæser...</em>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
         <h2>Deltagere</h2>
         <p>Filtrer og sortér for at finde den deltager, du vil bakke op om.</p>
       </div>
@@ -441,7 +455,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbxevIdifUMUg1KWT6a8nw_-djWK_euUvVS8aAQUtf5pI_zBvXPKK4zm3aOKoZrkR3Enbw/exec";
+const API_URL="https://script.google.com/macros/s/AKfycby6qZLffK9EpIIDNs5MYu7uMcSSTb6wE1K_KMs4Qc-cUZtA1nYNNAV-sM5k1JLOOfVuMg/exec";
 const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
@@ -452,6 +466,9 @@ let donors=[];
 let isAdmin=false;
 let searchTerm="";
 let sortKey="distance";
+
+function round2(n){ return Math.round(n*100)/100; }
+function escapeHtml(s){ if(!s) return ''; return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 /* FETCH DATA */
 async function fetchParticipants(){
@@ -665,26 +682,43 @@ function updateAdminPreview(){
 /* UPDATE TOTALS */
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
-  const totalDonationActual = participants.reduce((sum,p)=>{
-    return sum + calculateDonationForParticipant(p.Navn, p.Distance);
-  },0);
-  const totalDonationPotential = participants.reduce((sum,p)=>{
-    return sum + calculatePotentialDonationForParticipant(p.Navn, p.Distance);
-  },0);
+
+  // Recompute totals using per-donation threshold logic
+  let totalDonationActual = 0;
+  let totalDonationPotential = 0; // minimal guaranteed total (show with +)
+
+  donors.forEach(d => {
+    const recipient = d.Modtager;
+    const distance = Number(participants.find(p=>p.Navn===recipient)?.Distance || 0);
+    const flat = Number(d.FastBeløb || 0);
+    const perKm = Number(d.BeløbPrKm || 0);
+    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+
+    const triggered = threshold > 0 ? distance >= threshold : true;
+    const actualAmount = triggered ? round2(flat + perKm * distance) : 0;
+
+    // potential amount (conservative): if threshold set, use threshold as km; otherwise use current distance
+    const potentialKm = threshold > 0 ? threshold : distance;
+    const potentialAmount = round2(flat + perKm * potentialKm);
+
+    totalDonationActual += actualAmount;
+    totalDonationPotential += (triggered ? actualAmount : potentialAmount);
+  });
   const donorsUnique = new Set(donors.map(d=>d.Telefon)).size;
 
   document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
   document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0);
-  document.getElementById("totalDonationPotential").textContent = totalDonationPotential.toFixed(0);
+  // Show plus sign to indicate "at least this amount"
+  document.getElementById("totalDonationPotential").textContent = '+' + totalDonationPotential.toFixed(0);
   document.getElementById("totalParticipants").textContent = participants.length;
   document.getElementById("totalDonors").textContent = donorsUnique;
 
-  const donationProgress = Math.min(100, (totalDonation/GOAL_DONATION)*100 || 0);
+  const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
   const distanceProgress = Math.min(100, (totalDistance/GOAL_DISTANCE)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
-  document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)} kr`;
+  document.getElementById("donationPotentialLabel").textContent = `+${totalDonationPotential.toFixed(0)} kr`;
   document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${GOAL_DISTANCE} km`;
 }
 
@@ -706,15 +740,19 @@ function updateLeaderboards(){
   // TOP DONORER (telefon = unik donor)
   const donorTotals={};
 
+  // Only count fulfilled (triggered) donations for leaderboard totals
   donors.forEach(d=>{
-    const key=d.Telefon;
-    const amount =
-      Number(d.FastBeløb||0) +
-      Number(d.BeløbPrKm||0) *
-      (participants.find(p=>p.Navn===d.Modtager)?.Distance||0);
+    const key = d.Telefon;
+    const recipient = d.Modtager;
+    const distance = Number(participants.find(p=>p.Navn===recipient)?.Distance || 0);
+    const flat = Number(d.FastBeløb || 0);
+    const perKm = Number(d.BeløbPrKm || 0);
+    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+    const triggered = threshold > 0 ? distance >= threshold : true;
+    const amount = triggered ? round2(flat + perKm * distance) : 0;
 
-    donorTotals[key]=(donorTotals[key]||{Navn:d.Navn,Total:0});
-    donorTotals[key].Total+=amount;
+    donorTotals[key] = (donorTotals[key] || {Navn: d.Navn, Total: 0});
+    donorTotals[key].Total += amount;
   });
 
   const topDonors = Object.values(donorTotals)
@@ -733,6 +771,7 @@ function updateLeaderboards(){
   const recipientTotals = participants.map(p=>{
     return {
       Navn:p.Navn,
+      // only fulfilled donations counted
       Total:calculateDonationForParticipant(p.Navn,p.Distance)
     };
   }).sort((a,b)=>b.Total-a.Total).slice(0,5);
@@ -744,6 +783,66 @@ function updateLeaderboards(){
     row.innerHTML=`<td>${i+1}. ${d.Navn}</td><td>${d.Total.toFixed(0)}</td>`;
     tbodyTopRecipients.appendChild(row);
   });
+
+  // UPDATE POTENTIAL LIST (non-fulfilled pledges sorted by potential amount)
+  updatePotentialList();
+}
+
+function computeDonationTriggered(d, distance){
+  const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+  return threshold > 0 ? distance >= threshold : true;
+}
+
+function computePotentialForDonation(d, distance){
+  const flat = Number(d.FastBeløb || 0);
+  const perKm = Number(d.BeløbPrKm || 0);
+  const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+  if (threshold > 0){
+    return { amount: round2(flat + perKm * threshold), bounded: true, threshold: threshold };
+  }
+  // no threshold: use current distance as conservative minimal potential
+  return { amount: round2(flat + perKm * distance), bounded: false, threshold: 0 };
+}
+
+function updatePotentialList(){
+  const container = document.getElementById('potentialDonations');
+  if(!container) return;
+
+  // gather non-triggered donations
+  const items = [];
+  donors.forEach(d=>{
+    const recipient = d.Modtager;
+    const distance = Number(participants.find(p=>p.Navn===recipient)?.Distance || 0);
+    const triggered = computeDonationTriggered(d, distance);
+    if(!triggered){
+      const pot = computePotentialForDonation(d, distance);
+      items.push({ donor: d.Navn, telefon: d.Telefon, recipient: recipient, flat: Number(d.FastBeløb||0), perKm: Number(d.BeløbPrKm||0), potential: pot.amount, bounded: pot.bounded, threshold: pot.threshold });
+    }
+  });
+
+  if(items.length === 0){
+    container.innerHTML = '<div class="muted">Ingen potentielle (udestående) donationer.</div>';
+    return;
+  }
+
+  items.sort((a,b)=>b.potential - a.potential);
+
+  const list = document.createElement('div');
+  list.style.display = 'grid';
+  list.style.gap = '10px';
+
+  items.forEach((it, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'donation-item';
+    const type = it.perKm > 0 ? `${it.perKm.toFixed(0)} kr/km (pr/km)` : `${it.flat.toFixed(0)} kr (engangs)`;
+    const thr = it.threshold > 0 ? ` (tærskel ${it.threshold.toFixed(1)} km)` : '';
+    const potLabel = it.bounded ? `${it.potential.toFixed(0)} kr` : `${it.potential.toFixed(0)} kr +`;
+    el.innerHTML = `<strong>${idx+1}. ${escapeHtml(it.donor)}</strong> → ${escapeHtml(it.recipient)} — ${type}${thr} — Potentiale: <strong>${potLabel}</strong>`;
+    list.appendChild(el);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(list);
 }
 
 function updateRecentDonations(){

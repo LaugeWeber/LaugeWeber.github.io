@@ -292,23 +292,23 @@ select option[disabled]{color:#999;}
           <div class="field">
             <label for="sponsorFlat">Engangsbeløb (kr.)</label>
             <input type="number" id="sponsorFlat" min="0" step="1" placeholder="Fx 200">
+            <div class="help">Sæt et engangsbeløb hvis du vil betale et fast beløb.</div>
           </div>
           <div class="field">
             <label for="sponsorPerKm">Beløb pr. km (kr.)</label>
             <input type="number" id="sponsorPerKm" min="0" step="1" placeholder="Fx 5">
+            <div class="help">Sæt beløb pr. km hvis du vil støtte afhængigt af hvor langt deltageren går. Du kan bruge både engangs- og kr/km samtidigt.</div>
           </div>
         </div>
 
         <div class="field">
-          <label for="sponsorThreshold">Betal kun hvis deltager går mindst (km)</label>
-          <input type="number" id="sponsorThreshold" min="0" step="0.1" placeholder="Fx 5.0">
+          <label for="sponsorThreshold">Tærskel (km) — valgfrit</label>
+          <input type="number" id="sponsorThreshold" min="0" step="0.1" placeholder="Lad stå tom for ingen tærskel">
+          <div class="help">Sæt en tærskel hvis du kun vil betale, hvis deltageren når mindst denne distance. Lad være tomt eller 0 hvis donationen gælder uanset distance.</div>
           <div class="help">Hvis sat, betales kun når deltager har nået denne distance.</div>
         </div>
 
-        <div class="field">
-          <label for="sponsorMessage">Besked til deltager (valgfri)</label>
-          <textarea id="sponsorMessage" rows="3" placeholder="Skriv en kort hilsen..."></textarea>
-        </div>
+        <!-- Besked-felt fjernet efter brugerønske -->
 
         <button class="cta" type="submit">Tilføj donation</button>
         <div class="help" id="formStatus"></div>
@@ -355,7 +355,7 @@ select option[disabled]{color:#999;}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxevIdifUMUg1KWT6a8nw_-djWK_euUvVS8aAQUtf5pI_zBvXPKK4zm3aOKoZrkR3Enbw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby6qZLffK9EpIIDNs5MYu7uMcSSTb6wE1K_KMs4Qc-cUZtA1nYNNAV-sM5k1JLOOfVuMg/exec";
 const ADMIN_KEY = "walkathon_admin";
 const ADMIN_CODE = "123";
 let participants = [];
@@ -586,7 +586,7 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
   const flat = parseFloat(document.getElementById("sponsorFlat").value)||0;
   const perKm = parseFloat(document.getElementById("sponsorPerKm").value)||0;
   const threshold = parseFloat(document.getElementById("sponsorThreshold").value)||0;
-  const message = document.getElementById("sponsorMessage").value.trim();
+  // Besked er fjernet
 
   if(!phone || !email || !name || !recipient || (flat<=0 && perKm<=0)){
     document.getElementById("formStatus").textContent = "Udfyld alle felter korrekt.";
@@ -603,7 +603,6 @@ document.getElementById("sponsorForm").addEventListener("submit", async e=>{
     Modtager: recipient,
     FastBeløb: flat,
     BeløbPrKm: perKm,
-    Besked: message,
     ThresholdKm: threshold
   };
 

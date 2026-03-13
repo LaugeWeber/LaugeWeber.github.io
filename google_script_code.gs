@@ -337,11 +337,7 @@ function validateDonationerData(data) {
   if (isNaN(threshold) || threshold < 0) {
     throw new Error("Ugyldig tærskelværdi");
   }
-  
-  // Besked er optional, men tjek længde
-  if (data.Besked && typeof data.Besked === 'string' && data.Besked.length > 500) {
-    throw new Error("Besked må max være 500 tegn");
-  }
+
 }
 
 /*************** SHEET READ/WRITE ****************/
@@ -393,22 +389,25 @@ function writeToDeltagere(data) {
     const distance = Number(data.Distance || 0);
     const email = (data.Email || "").toString().trim();
     
-    // Tjek for duplikater
+    // Tjek for duplikater: både navn og email må ikke være i brug
     const lastRow = sheet.getLastRow();
-    const existing = sheet.getRange(1, 1, lastRow, 1).getValues();
-    
-    for (let i = 1; i < existing.length; i++) {
-      if (existing[i][0].toString().toLowerCase() === navn.toLowerCase()) {
-        // Opdater eksisterende
-        sheet.getRange(i + 1, 2).setValue(distance);
-        Logger.log("Updated existing participant: " + navn);
-        return;
+    if (lastRow >= 2) {
+      const rows = sheet.getRange(2, 1, lastRow - 1, Math.max(3, sheet.getLastColumn())).getValues();
+      for (let i = 0; i < rows.length; i++) {
+        const existingName = rows[i][0] ? rows[i][0].toString().trim() : '';
+        const existingEmail = rows[i][2] ? rows[i][2].toString().trim() : '';
+        if (existingName && existingName.toLowerCase() === navn.toLowerCase()) {
+          throw new Error('Navn findes allerede som deltager');
+        }
+        if (email && existingEmail && existingEmail.toLowerCase() === email.toLowerCase()) {
+          throw new Error('Email er allerede brugt til en anden deltager');
+        }
       }
     }
-    
-    // Tilføj ny række (tilføjer valgfri Email i 3. kolonne)
+
+    // Tilføj ny række (Navn, Distance, Email)
     sheet.appendRow([navn, distance, email]);
-    Logger.log("Added new participant: " + navn);
+    Logger.log("Added new participant: " + navn + " <" + email + ">");
     
   } finally {
     lock.releaseLock();
@@ -435,7 +434,6 @@ function writeToDonationer(data) {
       data.Modtager.trim(),
       Number(data.FastBeløb || 0),
       Number(data.BeløbPrKm || 0),
-      (data.Besked || "").trim(),
       Number(data.ThresholdKm || 0),
       "" // MailSendt kolonne
     ]);
@@ -465,6 +463,47 @@ function updateParticipantDistance(name, distance) {
       if (data[i][0].toString().toLowerCase() === name.toLowerCase()) {
         sheet.getRange(i + 1, 2).setValue(distance);
         Logger.log("Updated distance for " + name + " to " + distance);
+
+        // After updating distance, automatically mark any donations as fulfilled
+        try {
+          const donationSheet = ss.getSheetByName("Donationer");
+          if (donationSheet) {
+            const donationData = donationSheet.getDataRange().getValues();
+            if (donationData.length > 0) {
+              const headers = donationData[0].map(h => h.toString());
+              const idxModtager = headers.indexOf("Modtager");
+              const idxThreshold = headers.indexOf("ThresholdKm") !== -1 ? headers.indexOf("ThresholdKm") : headers.indexOf("Threshold");
+              let idxIndfriet = headers.indexOf("Indfriet");
+
+              // If Indfriet column doesn't exist, create it as the last column
+              if (idxIndfriet === -1) {
+                const newCol = headers.length + 1;
+                donationSheet.getRange(1, newCol).setValue("Indfriet");
+                idxIndfriet = headers.length; // zero-based
+                Logger.log("Tilføjede kolonne 'Indfriet' i Donationer-arket");
+              }
+
+              // Iterate rows and mark as 'JA' when threshold reached
+              for (let r = 1; r < donationData.length; r++) {
+                const row = donationData[r];
+                const rowModtager = idxModtager !== -1 ? row[idxModtager] : "";
+                if (!rowModtager) continue;
+                if (rowModtager.toString().toLowerCase() !== name.toLowerCase()) continue;
+
+                const thresholdVal = (idxThreshold !== -1) ? Number(row[idxThreshold] || 0) : 0;
+                const indfrietFlag = row[idxIndfriet] ? row[idxIndfriet].toString() : "";
+
+                if (thresholdVal > 0 && distance >= thresholdVal && indfrietFlag !== "JA") {
+                  donationSheet.getRange(r + 1, idxIndfriet + 1).setValue("JA");
+                  Logger.log(`Marked donation row ${r+1} as Indfriet for recipient ${name} (threshold ${thresholdVal})`);
+                }
+              }
+            }
+          }
+        } catch (fulfillErr) {
+          Logger.log("ERROR auto-fulfill: " + fulfillErr.toString());
+        }
+
         return;
       }
     }
@@ -520,7 +559,6 @@ function sendAggregatedPaymentEmails() {
     const idxModtager = headers.indexOf("Modtager");
     const idxFast = headers.indexOf("FastBeløb");
     const idxPerKm = headers.indexOf("BeløbPrKm");
-    const idxBesked = headers.indexOf("Besked");
     const idxThreshold = headers.indexOf("ThresholdKm");
 
     for (let i = 1; i < donationerData.length; i++) {
@@ -856,8 +894,8 @@ FØR DEPLOYMENT TIL PRODUKTION:
    Ark: "Deltagere"
   - Kolonner: Navn, Distance
    
-   Ark: "Donationer"
-   - Kolonner: Telefon, Email, Navn, Modtager, FastBeløb, BeløbPrKm, Besked, MailSendt
+  Ark: "Donationer"
+  - Kolonner: Telefon, Email, Navn, Modtager, FastBeløb, BeløbPrKm, ThresholdKm, MailSendt
    
 6. TEST GRUNDIGT:
    - Test connection endpoint
