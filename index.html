@@ -358,14 +358,13 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <div class="card">
         <h3>Indsamling</h3>
           <div class="progress-meta">
-            <div class="meta-row"><div class="meta-left" style="font-weight:700;">Mål: Leje af fælles sauna</div><div class="meta-right">10.000 kr</div></div>
-            <div class="meta-row"><div class="meta-left">Nu</div><div class="meta-right" id="donationProgressLabel">0 / 0 kr</div></div>
-            <div class="meta-row"><div class="meta-left">Potentiel</div><div class="meta-right" id="donationPotentialLabel">0 kr</div></div>
-          </div>
+            <div class="meta-row"><div class="meta-left" style="font-weight:700;">Mål: Leje af fælles sauna</div><div class="meta-right" id="goalDonationValue">10.000 kr</div></div>
+            <div class="progress-meta"><span id="donationProgressLabel">0 / 0 kr</span></div>
         <div class="progress-bar"><span id="donationProgressBar"></span></div>
       </div>
       <div class="card">
         <h3>Distance</h3>
+        <div class="meta-row"><div class="meta-left" style="font-weight:700;">Mål: 50 km pr. person</div><div class="meta-right">10.000 kr</div></div>
         <div class="progress-meta"><span id="distanceProgressLabel">0 / 0 km</span></div>
         <div class="progress-bar"><span id="distanceProgressBar"></span></div>
       </div>
@@ -488,6 +487,32 @@ let sortKey="distance";
 
 function round2(n){ return Math.round(n*100)/100; }
 function escapeHtml(s){ if(!s) return ''; return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// Parse a number from strings like "10.000 kr" or "10000" or "1,5k"
+function parseNumberFromString(s){
+  if(!s) return 0;
+  // remove non-digit, non-dot, non-comma
+  const cleaned = s.toString().trim().replace(/[^0-9.,-]/g,'');
+  if(cleaned === '') return 0;
+  // If both dot and comma present, assume dot is thousands sep and comma decimal
+  if(cleaned.indexOf('.') !== -1 && cleaned.indexOf(',') !== -1){
+    return parseFloat(cleaned.replace(/\./g,'').replace(/,/g,'.')) || 0;
+  }
+  // If only dot present and it's used as thousands (three digits after), remove dots
+  if(cleaned.indexOf('.') !== -1 && /\.[0-9]{3}$/.test(cleaned)){
+    return parseFloat(cleaned.replace(/\./g,'')) || 0;
+  }
+  // normalize comma to dot
+  const normalized = cleaned.replace(/,/g,'.');
+  return parseFloat(normalized) || 0;
+}
+
+function getGoalDonation(){
+  const el = document.getElementById('goalDonationValue');
+  if(!el) return GOAL_DONATION;
+  const n = parseNumberFromString(el.textContent || el.innerText || '');
+  return n > 0 ? n : GOAL_DONATION;
+}
 
 /* FETCH DATA */
 async function fetchParticipants(){
@@ -742,11 +767,12 @@ function updateTotals(){
   const donorsCaption = document.getElementById("totalDonorsCaption");
   if(donorsCaption) donorsCaption.textContent = '';
 
-  const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
+  const goalDonation = getGoalDonation();
+  const donationProgress = Math.min(100, (totalDonationActual/goalDonation)*100 || 0);
   const distanceProgress = Math.min(100, (totalDistance/goalDistance)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
-  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
+  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${goalDonation.toFixed(0)} kr`;
   document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
   document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${goalDistance} km`;
 }
