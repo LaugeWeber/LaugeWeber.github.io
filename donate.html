@@ -376,6 +376,13 @@ let searchTerm = "";
 
 let isAdmin = false;
 
+function toNumber(value){
+  if (typeof value === "number") return isNaN(value) ? 0 : value;
+  const str = (value ?? "").toString().trim().replace(",", ".");
+  const num = Number(str);
+  return isNaN(num) ? 0 : num;
+}
+
 // Hent deltagere og fyld dropdown
 async function fetchParticipants(){
   const res = await fetch(`${API_URL}?sheet=Deltagere`);
@@ -406,27 +413,32 @@ function showToast(message, type="success"){
 }
 
 function getRecipientDistance(name){
-  return Number(participants.find(p=>p.Navn===name)?.Distance || 0);
+  if(!name || name === "-") return 0;
+  const normalizedName = name.toString().trim().toLowerCase();
+  const participant = participants.find(p => (p.Navn || "").toString().trim().toLowerCase() === normalizedName);
+  return toNumber(participant?.Distance || 0);
 }
 
 function calculateDonationForParticipant(name, distance){
+  const normalizedName = (name || "").toString().trim().toLowerCase();
+  const safeDistance = toNumber(distance);
   return donors
-    .filter(d=>d.Modtager===name)
+    .filter(d=>(d.Modtager || "").toString().trim().toLowerCase()===normalizedName)
     .reduce((sum,d)=>{
-      const flat = Number(d.FastBeløb || 0);
-      const perKm = Number(d.BeløbPrKm || 0);
-      const threshold = Number(d.ThresholdKm || d.Threshold || 0);
-      if (threshold > 0 && distance < threshold) return sum; // not triggered
-      return sum + flat + perKm * distance;
+      const flat = toNumber(d.FastBeløb || 0);
+      const perKm = toNumber(d.BeløbPrKm || 0);
+      const threshold = toNumber(d.ThresholdKm || d.Threshold || 0);
+      if (threshold > 0 && safeDistance < threshold) return sum; // not triggered
+      return sum + flat + perKm * safeDistance;
     },0);
 }
 
 function updateSummary(){
-  const name = document.getElementById("sponsorRecipient").value || "-";
+  const name = document.getElementById("sponsorRecipient").value || currentRecipient || "-";
   const distance = name === "-" ? 0 : getRecipientDistance(name);
-  const flat = Number(document.getElementById("sponsorFlat").value || 0);
-  const perKm = Number(document.getElementById("sponsorPerKm").value || 0);
-  const threshold = Number(document.getElementById("sponsorThreshold").value || 0);
+  const flat = toNumber(document.getElementById("sponsorFlat").value || 0);
+  const perKm = toNumber(document.getElementById("sponsorPerKm").value || 0);
+  const threshold = toNumber(document.getElementById("sponsorThreshold").value || 0);
   const triggered = threshold > 0 ? distance >= threshold : true;
   const total = triggered ? (flat + perKm * distance) : 0;
 
@@ -461,18 +473,36 @@ function updateRecentDonations(){
 
 function renderParticipantOptions(){
   const sel = document.getElementById("sponsorRecipient");
+  const selectedBeforeRender = currentRecipient || sel.value || "";
   sel.innerHTML = '<option value="" disabled selected>Vaelg deltager</option>';
   const normalized = searchTerm.trim().toLowerCase();
-  participants
+  const filtered = participants
     .slice()
     .filter(p=>p.Navn.toLowerCase().includes(normalized))
-    .sort((a,b)=>a.Navn.localeCompare(b.Navn))
-    .forEach(p=>{
-      const opt = document.createElement("option");
-      opt.value = p.Navn;
-      opt.textContent = p.Navn;
-      sel.appendChild(opt);
-    });
+    .sort((a,b)=>a.Navn.localeCompare(b.Navn));
+
+  const selectedExistsInAll = participants.some(p => p.Navn === selectedBeforeRender);
+  const selectedExistsInFiltered = filtered.some(p => p.Navn === selectedBeforeRender);
+  if(selectedBeforeRender && selectedExistsInAll && !selectedExistsInFiltered){
+    const preserved = document.createElement("option");
+    preserved.value = selectedBeforeRender;
+    preserved.textContent = `${selectedBeforeRender} (valgt)`;
+    sel.appendChild(preserved);
+  }
+
+  filtered.forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = p.Navn;
+    opt.textContent = p.Navn;
+    sel.appendChild(opt);
+  });
+
+  if(selectedBeforeRender && selectedExistsInAll){
+    sel.value = selectedBeforeRender;
+    currentRecipient = selectedBeforeRender;
+  }
+
+  updateSummary();
 }
 
 function setSelectedRecipient(name){
@@ -571,6 +601,7 @@ document.getElementById("sponsorRecipient").addEventListener("change", e=>{
 
 document.getElementById("sponsorFlat").addEventListener("input", updateSummary);
 document.getElementById("sponsorPerKm").addEventListener("input", updateSummary);
+document.getElementById("sponsorThreshold").addEventListener("input", updateSummary);
 
 document.getElementById("sponsorPhone").addEventListener("input", function(){
   const phone = this.value.trim();
