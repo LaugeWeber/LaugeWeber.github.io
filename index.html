@@ -403,7 +403,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
         <h3>Distance</h3>
         <div class="progress-meta">
           <div class="meta-left">Mål: 50 km pr. person</div>
-          <span id="distanceProgressLabel">(0.0) / (50*0) km</span>
+          <span id="distanceProgressLabel">0.0 / 0 km</span>
         </div>
         <div class="progress-bar"><span id="distanceProgressBar"></span></div>
       </div>
@@ -693,16 +693,29 @@ function updateParticipants(){
 }
 
 function buildDonorTotals(){
+  const toNumber = (v)=>{
+    if (typeof v === 'number') return isNaN(v) ? 0 : v;
+    const s = (v ?? '').toString().trim().replace(',', '.');
+    const n = Number(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const isYes = (v)=>{
+    const s = (v ?? '').toString().trim().toUpperCase();
+    return s === 'JA' || s === 'YES' || s === 'TRUE' || s === '1';
+  };
+
   const totals = {};
   donors.forEach(d=>{
-    const key = (d.Email || d.Telefon || d.Navn || "ukendt").toString();
-    const recipient = d.Modtager;
-    const distance = Number(participants.find(p=>p.Navn===recipient)?.Distance || 0);
-    const flat = Number(d.FastBeløb || 0);
-    const perKm = Number(d.BeløbPrKm || 0);
-    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
-    const indfrietFlag = (d.Indfriet || '').toString().toUpperCase() === 'JA';
-    const triggered = indfrietFlag || (threshold > 0 ? distance >= threshold : true);
+    const key = (d.Email || d.Telefon || d.Navn || "ukendt").toString().trim().toLowerCase();
+    const recipient = (d.Modtager || '').toString().trim().toLowerCase();
+    const match = participants.find(p=>(p.Navn || '').toString().trim().toLowerCase()===recipient);
+    const distance = toNumber(match?.Distance || 0);
+    const flat = toNumber(d.FastBeløb || 0);
+    const perKm = toNumber(d.BeløbPrKm || 0);
+    const threshold = toNumber(d.ThresholdKm || d.Threshold || 0);
+    const isMarkedIndfriet = isYes(d.Indfriet);
+    const reachedThreshold = threshold > 0 ? distance >= threshold : true;
+    const triggered = threshold > 0 ? (isMarkedIndfriet || reachedThreshold) : true;
     const amount = triggered ? round2(flat + perKm * distance) : 0;
     if(!totals[key]){
       totals[key] = { navn: d.Navn || "Donor", email: d.Email || "", total: 0 };
@@ -786,7 +799,7 @@ function updateTotals(){
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
   document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
-  document.getElementById("distanceProgressLabel").textContent = `(${totalDistance.toFixed(1)}) / (50*${participants.length}) km`;
+  document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${goalDistance} km`;
 }
 
 /* UPDATE LEADERBOARDS */
