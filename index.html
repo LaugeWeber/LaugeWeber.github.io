@@ -269,6 +269,10 @@ input:focus, select:focus{outline:2px solid var(--ring);border-color:var(--accen
 
 .donation-feed{display:grid;gap:12px;}
 .donation-item{padding:12px;border-radius:12px;background:#f7f9fd;border:1px solid #e4ebf5;}
+.potential-title{font-weight:700;margin-bottom:8px;}
+.potential-meta{display:flex;flex-wrap:wrap;gap:8px;}
+.potential-chip{background:#eef3fb;border:1px solid #dbe6f5;color:#1f3550;padding:4px 8px;border-radius:999px;font-size:.88rem;line-height:1.2;}
+.potential-chip.emphasis{background:#fff4dc;border-color:#f2d28a;color:#704200;font-weight:700;}
 
 .admin-row{display:flex;justify-content:flex-end;margin-top:12px;}
 .admin-row button{background:rgba(19,32,51,.06);border:none;border-radius:999px;padding:8px 14px;cursor:pointer;}
@@ -305,6 +309,9 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 
   /* Reduce table padding slightly on mobile */
   .card table td, .card table th{padding:6px;}
+
+  .potential-meta{gap:6px;}
+  .potential-chip{font-size:.82rem;}
 }
 </style>
 </head>
@@ -325,8 +332,8 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 <main class="wrap">
   <section class="hero">
     <div class="hero-card">
-      <div class="sauna-spotlight"><span class="dot"></span>Sauna-fond 2026</div>
-      <p class="sauna-message">Vi samler ind til en faelles sauna til kollegiet.</p>
+      <div class="sauna-spotlight"><span class="dot"></span>Gå som en gal for en sauna</div>
+      <p class="sauna-message">Vi samler ind til en fælles sauna til kollegiet.</p>
       <h1>Walkathon overblik</h1>
       <p>Følg live med i distance, donationer og topindsamlinger til Kollegiets Store Gåtur.</p>
       <div class="event-date">
@@ -344,7 +351,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <div>
         <h2>👥 Med fellow alumner og venner</h2>
         <ul>
-          <li><strong>Vi samler ind til en faelles sauna</strong> til kollegiet</li>
+          <li>Vi samler ind til en fælles sauna til kollegiet</li>
           <li>Godt selskab og kanon god stemning</li>
           <li>Hyggelig udendørs lounge i haven</li>
           <li>Snacks og mulighed for at lave mad til døgnets måltider</li>
@@ -396,7 +403,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
         <h3>Distance</h3>
         <div class="progress-meta">
           <div class="meta-left">Mål: 50 km pr. person</div>
-          <span id="distanceProgressLabel">0 / 0 km</span>
+          <span id="distanceProgressLabel">(0.0) / (50*0) km</span>
         </div>
         <div class="progress-bar"><span id="distanceProgressBar"></span></div>
       </div>
@@ -738,8 +745,8 @@ function updateAdminPreview(){
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
 
-  // Dynamic distance goal: number of participants * 50 km (never 0)
-  const goalDistance = Math.max(50, participants.length * 50);
+  // Dynamic distance goal: exactly number of participants * 50 km
+  const goalDistance = participants.length * 50;
 
   // Recompute totals using per-donation threshold logic
   let totalDonationActual = 0;
@@ -774,12 +781,12 @@ function updateTotals(){
   if(donorsCaption) donorsCaption.textContent = '';
 
   const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
-  const distanceProgress = Math.min(100, (totalDistance/goalDistance)*100 || 0);
+  const distanceProgress = goalDistance > 0 ? Math.min(100, (totalDistance/goalDistance)*100) : 0;
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
   document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
-  document.getElementById("distanceProgressLabel").textContent = `(${totalDistance.toFixed(1)}) / (${goalDistance}) km`;
+  document.getElementById("distanceProgressLabel").textContent = `(${totalDistance.toFixed(1)}) / (50*${participants.length}) km`;
 }
 
 /* UPDATE LEADERBOARDS */
@@ -894,10 +901,11 @@ function updatePotentialList(){
   items.forEach((it, idx)=>{
     const el = document.createElement('div');
     el.className = 'donation-item';
-    const type = `${it.flat.toFixed(0)} kr (engangs) + ${it.perKm.toFixed(0)} kr/km`;
-    const thr = it.threshold > 0 ? ` (tærskel ${it.threshold.toFixed(1)} km)` : '';
+    const donorName = escapeHtml(it.donor || 'Donor');
+    const recipientName = escapeHtml(it.recipient || 'Modtager');
     const potLabel = it.bounded ? `${it.potential.toFixed(0)} kr` : `${it.potential.toFixed(0)} kr +`;
-    el.innerHTML = `<strong>${idx+1}. ${escapeHtml(it.donor)}</strong> → ${escapeHtml(it.recipient)} — ${type}${thr} — Potentiale: <strong>${potLabel}</strong>`;
+    const thresholdText = it.threshold > 0 ? `${it.threshold.toFixed(1)} km` : 'Ingen';
+    el.innerHTML = `<strong>${idx+1}. ${donorName}</strong> → ${recipientName} · Engangsbeløb: ${it.flat.toFixed(0)} kr · Pr. km: ${it.perKm.toFixed(0)} kr/km · Tærskel: ${thresholdText} · Potentiale: <strong>${potLabel}</strong>`;
     list.appendChild(el);
   });
 
