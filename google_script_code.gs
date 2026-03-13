@@ -862,8 +862,8 @@ function sendSignupConfirmationEmail(email, name) {
       <p><strong>Hvor:</strong> ${escapeHtml(EVENT_LOCATION)}</p>
       <p style="margin-top:16px;">Klik på linket herunder for at føje begivenheden til din Google Kalender:</p>
       <p><a href="${calendarLink}" style="display:inline-block;padding:12px 16px;background:#0e7c86;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Tilføj til Google Kalender</a></p>
-      <p style="margin-top:16px;">Du kan altid finde den opdaterede oversigt her:</p>
-      <p><a href="${MAIN_PAGE_URL}" style="display:inline-block;padding:12px 16px;background:#132033;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Gå til main page</a></p>
+      <p style="margin-top:16px;">Du kan altid finde den officielle Walkathon-hjemmeside her:</p>
+      <p><a href="${MAIN_PAGE_URL}" style="display:inline-block;padding:12px 16px;background:#132033;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">https://laugeweber.github.io/index.html</a></p>
       <p style="margin-top:18px;color:#666;">Du kan også importere vedhæftede kalenderfil (.ics) for automatisk at få en påmindelse 2 uger før.</p>
       <p style="margin-top:24px;">Med venlig hilsen<br><strong>Walkathon-teamet</strong></p>
     </div>
