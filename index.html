@@ -198,7 +198,7 @@ header{
   box-shadow:var(--shadow);
 }
 .stat{display:flex;flex-direction:column;gap:6px;}
-.stat strong{font-size:1.6rem;display:inline-block;min-width:120px;text-align:right;}
+.stat strong{font-size:1.6rem;display:block;min-width:0;text-align:left;}
 .stat span{color:var(--muted);font-weight:600;}
 
 .section{margin-top:36px;}
@@ -211,9 +211,13 @@ header{
 
 /* Progress meta alignment */
 .progress-meta{display:grid;gap:6px;}
-.progress-meta .meta-row{display:flex;justify-content:space-between;align-items:center;}
+.progress-meta .meta-row{display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
 .progress-meta .meta-left{color:var(--muted);font-size:.95rem;}
-.progress-meta .meta-right{text-align:right;font-weight:700;}
+.progress-meta .meta-right{text-align:left;font-weight:700;}
+
+/* Ensure progress cards place the bar at the same vertical level */
+.progress-grid > .card{display:flex;flex-direction:column;}
+.progress-grid > .card .progress-bar{margin-top:auto;}
 
 .leaderboards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 .card h3{margin-bottom:12px;}
@@ -324,7 +328,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 
   <section class="grid stagger">
     <div class="card stat">
-      <span>Total donation</span>
+      <span>Total indsamling</span>
       <strong id="totalDonationActual">0</strong>
       <div style="font-size:.9rem;color:var(--muted);margin-top:6px;">
         Potentielt samlet: <strong id="totalDonationPotential">0</strong>
@@ -373,7 +377,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
     <div class="section-head">
       <div>
         <h2>Leaderboards</h2>
-        <p>Se hvem der er foran lige nu.</p>
+        <p>Se, hvem der er foran lige nu.</p>
       </div>
     </div>
     <div class="leaderboards">
@@ -655,11 +659,16 @@ function buildDonorTotals(){
   const totals = {};
   donors.forEach(d=>{
     const key = (d.Email || d.Telefon || d.Navn || "ukendt").toString();
-    const amount =
-      Number(d.FastBeløb||0) +
-      Number(d.BeløbPrKm||0) * (participants.find(p=>p.Navn===d.Modtager)?.Distance||0);
+    const recipient = d.Modtager;
+    const distance = Number(participants.find(p=>p.Navn===recipient)?.Distance || 0);
+    const flat = Number(d.FastBeløb || 0);
+    const perKm = Number(d.BeløbPrKm || 0);
+    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+    const indfrietFlag = (d.Indfriet || '').toString().toUpperCase() === 'JA';
+    const triggered = indfrietFlag || (threshold > 0 ? distance >= threshold : true);
+    const amount = triggered ? round2(flat + perKm * distance) : 0;
     if(!totals[key]){
-      totals[key] = { navn:d.Navn || "Donor", email:d.Email || "", total:0 };
+      totals[key] = { navn: d.Navn || "Donor", email: d.Email || "", total: 0 };
     }
     totals[key].total += amount;
   });
@@ -729,10 +738,10 @@ function updateTotals(){
   document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0) + ' kr';
   // Show plus sign after the potential number (e.g., "500+ kr")
   document.getElementById("totalDonationPotential").textContent = totalDonationPotential.toFixed(0) + '+ kr';
-  document.getElementById("totalParticipants").textContent = participants.length + ' tilmeldt';
+  document.getElementById("totalParticipants").textContent = participants.length;
   document.getElementById("totalDonors").textContent = donationCount;
   const donorsCaption = document.getElementById("totalDonorsCaption");
-  if(donorsCaption) donorsCaption.textContent = donationCount + ' registreret';
+  if(donorsCaption) donorsCaption.textContent = '';
 
   const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
   const distanceProgress = Math.min(100, (totalDistance/goalDistance)*100 || 0);
@@ -879,7 +888,19 @@ function updateRecentDonations(){
     item.className = "donation-item";
     const flat = Number(d.FastBeløb || 0);
     const perKm = Number(d.BeløbPrKm || 0);
-    item.textContent = `${d.Navn} -> ${d.Modtager}: ${flat.toFixed(0)} kr + ${perKm.toFixed(0)} kr/km`;
+    const threshold = Number(d.ThresholdKm || d.Threshold || 0);
+    const recipientDistance = Number(participants.find(p=>p.Navn===d.Modtager)?.Distance || 0);
+    const indfrietFlag = (d.Indfriet || '').toString().toUpperCase() === 'JA';
+    const triggered = indfrietFlag || (threshold > 0 ? recipientDistance >= threshold : true);
+
+    let parts = [];
+    parts.push(`<strong>${escapeHtml(d.Navn || 'Donor')}</strong> → <em>${escapeHtml(d.Modtager || 'Modtager')}</em>`);
+    parts.push(`${flat.toFixed(0)} kr` + (perKm > 0 ? ` + ${perKm.toFixed(0)} kr/km` : ''));
+    if(threshold > 0){
+      parts.push(`<span style="color:var(--muted);">Tærskel: ${threshold.toFixed(1)} km</span>`);
+      parts.push(triggered ? `<span style="color:green;font-weight:700;">✓ indfriet</span>` : `<span style="color:#b00020;font-weight:700;">⏳ ikke indfriet</span>`);
+    }
+    item.innerHTML = parts.join(' — ');
     list.appendChild(item);
   });
 }
