@@ -211,9 +211,9 @@ header{
 
 /* Progress meta alignment */
 .progress-meta{display:grid;gap:6px;}
-.progress-meta .meta-row{display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
+.progress-meta .meta-row{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:8px;}
 .progress-meta .meta-left{color:var(--muted);font-size:.95rem;}
-.progress-meta .meta-right{text-align:left;font-weight:700;}
+.progress-meta .meta-right{text-align:right;font-weight:700;min-width:6rem;}
 
 /* Ensure progress cards place the bar at the same vertical level */
 .progress-grid > .card{display:flex;flex-direction:column;}
@@ -357,15 +357,18 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
     <div class="progress-grid">
       <div class="card">
         <h3>Indsamling</h3>
-          <div class="progress-meta">
-            <div class="meta-row"><div class="meta-left" style="font-weight:700;">Mål: Leje af fælles sauna</div><div class="meta-right" id="goalDonationValue">10.000 kr</div></div>
-            <div class="progress-meta"><span id="donationProgressLabel">0 / 0 kr</span></div>
+        <div class="progress-meta">
+          <div class="meta-left">Mål: Leje af fælles sauna</div>
+          <span id="donationProgressLabel">0 / 0 kr</span>
+        </div>
         <div class="progress-bar"><span id="donationProgressBar"></span></div>
       </div>
       <div class="card">
         <h3>Distance</h3>
-        <div class="meta-row"><div class="meta-left" style="font-weight:700;">Mål: 50 km pr. person</div><div class="meta-right">10.000 kr</div></div>
-        <div class="progress-meta"><span id="distanceProgressLabel">0 / 0 km</span></div>
+        <div class="progress-meta">
+          <div class="meta-left">Mål: 50 km pr. person</div>
+          <span id="distanceProgressLabel">0 / 0 km</span>
+        </div>
         <div class="progress-bar"><span id="distanceProgressBar"></span></div>
       </div>
     </div>
@@ -487,32 +490,6 @@ let sortKey="distance";
 
 function round2(n){ return Math.round(n*100)/100; }
 function escapeHtml(s){ if(!s) return ''; return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-// Parse a number from strings like "10.000 kr" or "10000" or "1,5k"
-function parseNumberFromString(s){
-  if(!s) return 0;
-  // remove non-digit, non-dot, non-comma
-  const cleaned = s.toString().trim().replace(/[^0-9.,-]/g,'');
-  if(cleaned === '') return 0;
-  // If both dot and comma present, assume dot is thousands sep and comma decimal
-  if(cleaned.indexOf('.') !== -1 && cleaned.indexOf(',') !== -1){
-    return parseFloat(cleaned.replace(/\./g,'').replace(/,/g,'.')) || 0;
-  }
-  // If only dot present and it's used as thousands (three digits after), remove dots
-  if(cleaned.indexOf('.') !== -1 && /\.[0-9]{3}$/.test(cleaned)){
-    return parseFloat(cleaned.replace(/\./g,'')) || 0;
-  }
-  // normalize comma to dot
-  const normalized = cleaned.replace(/,/g,'.');
-  return parseFloat(normalized) || 0;
-}
-
-function getGoalDonation(){
-  const el = document.getElementById('goalDonationValue');
-  if(!el) return GOAL_DONATION;
-  const n = parseNumberFromString(el.textContent || el.innerText || '');
-  return n > 0 ? n : GOAL_DONATION;
-}
 
 /* FETCH DATA */
 async function fetchParticipants(){
@@ -767,12 +744,11 @@ function updateTotals(){
   const donorsCaption = document.getElementById("totalDonorsCaption");
   if(donorsCaption) donorsCaption.textContent = '';
 
-  const goalDonation = getGoalDonation();
-  const donationProgress = Math.min(100, (totalDonationActual/goalDonation)*100 || 0);
+  const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
   const distanceProgress = Math.min(100, (totalDistance/goalDistance)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
-  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${goalDonation.toFixed(0)} kr`;
+  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
   document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
   document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${goalDistance} km`;
 }
@@ -889,7 +865,7 @@ function updatePotentialList(){
   items.forEach((it, idx)=>{
     const el = document.createElement('div');
     el.className = 'donation-item';
-    const type = it.perKm > 0 ? `${it.perKm.toFixed(0)} kr/km (pr/km)` : `${it.flat.toFixed(0)} kr (engangs)`;
+    const type = `${it.flat.toFixed(0)} kr (engangs) + ${it.perKm.toFixed(0)} kr/km`;
     const thr = it.threshold > 0 ? ` (tærskel ${it.threshold.toFixed(1)} km)` : '';
     const potLabel = it.bounded ? `${it.potential.toFixed(0)} kr` : `${it.potential.toFixed(0)} kr +`;
     el.innerHTML = `<strong>${idx+1}. ${escapeHtml(it.donor)}</strong> → ${escapeHtml(it.recipient)} — ${type}${thr} — Potentiale: <strong>${potLabel}</strong>`;
