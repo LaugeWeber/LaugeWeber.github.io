@@ -756,10 +756,19 @@ function updateAdminPreview(){
 
 /* UPDATE TOTALS */
 function updateTotals(){
-  const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
+  const toNumber = (v)=>{
+    if (typeof v === 'number') return isNaN(v) ? 0 : v;
+    const s = (v ?? '').toString().trim().replace(',', '.');
+    const n = Number(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const validParticipants = participants.filter(p => (p?.Navn ?? '').toString().trim() !== '');
+  const participantCount = validParticipants.length;
+  const totalDistance = validParticipants.reduce((a,p)=>a+toNumber(p.Distance),0);
 
   // Dynamic distance goal: exactly number of participants * 50 km
-  const goalDistance = participants.length * 50;
+  const goalDistance = participantCount * 50;
 
   // Recompute totals using per-donation threshold logic
   let totalDonationActual = 0;
@@ -788,7 +797,7 @@ function updateTotals(){
   document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0) + ' kr';
   // Show plus sign after the potential number (e.g., "500+ kr")
   document.getElementById("totalDonationPotential").textContent = totalDonationPotential.toFixed(0) + '+ kr';
-  document.getElementById("totalParticipants").textContent = participants.length;
+  document.getElementById("totalParticipants").textContent = participantCount;
   document.getElementById("totalDonors").textContent = donationCount;
   const donorsCaption = document.getElementById("totalDonorsCaption");
   if(donorsCaption) donorsCaption.textContent = '';
