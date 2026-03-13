@@ -250,6 +250,24 @@ header{
   box-shadow:0 10px 20px rgba(14,124,134,.28);
   transition:width .55s cubic-bezier(.2,.85,.35,1);
 }
+.goal-target-marker{
+  position:absolute;
+  top:-6px;
+  width:2px;
+  height:40px;
+  background:#8a2d00;
+  box-shadow:0 0 0 2px rgba(255,255,255,.7);
+}
+.goal-target-marker::after{
+  content:"Mål";
+  position:absolute;
+  top:-18px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:.72rem;
+  font-weight:800;
+  color:#8a2d00;
+}
 .goal-track{display:grid;gap:10px;}
 .goal-milestones{
   position:relative;
@@ -264,6 +282,7 @@ header{
   min-width:78px;
 }
 .goal-milestones .tick.end{transform:translateX(-100%);}
+.goal-milestones .tick.lower{top:16px;}
 .goal-milestones .tick::before{
   content:"";
   display:block;
@@ -447,17 +466,19 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <div class="card">
         <h3>Indsamling til sauna</h3>
         <div class="progress-meta">
-          <div class="meta-left">Mål: 10.000 kr (halvt år)</div>
-          <span class="meta-right" id="donationProgressLabel">0 / 10.000 kr</span>
+          <div class="meta-left">Mål: 9.995 kr (halvt år) · Maks: 14.495 kr (1 år)</div>
+          <span class="meta-right" id="donationProgressLabel">0 / 9.995 kr</span>
         </div>
         <div class="goal-track">
-          <div class="progress-bar"><span id="donationProgressBar"></span></div>
+          <div class="progress-bar"><span id="donationProgressBar"></span><div class="goal-target-marker" style="left:68.95%;" aria-hidden="true"></div></div>
           <div class="goal-milestones" aria-hidden="true">
-            <div class="tick" style="left:20%;"><span class="amount">2.000 kr</span><span class="label">1 døgn</span></div>
-            <div class="tick" style="left:30%;"><span class="amount">3.000 kr</span><span class="label">1 uge</span></div>
-            <div class="tick" style="left:45%;"><span class="amount">4.500 kr</span><span class="label">1 måned</span></div>
-            <div class="tick" style="left:80%;"><span class="amount">8.000 kr</span><span class="label">3 måneder</span></div>
-            <div class="tick end" style="left:100%;"><span class="amount">10.000 kr</span><span class="label">Halvt år</span></div>
+            <div class="tick" style="left:14.45%;"><span class="amount">2.095 kr</span><span class="label">1 døgn</span></div>
+            <div class="tick lower" style="left:19.97%;"><span class="amount">2.895 kr</span><span class="label">1 uge</span></div>
+            <div class="tick" style="left:30.32%;"><span class="amount">4.395 kr</span><span class="label">1 måned</span></div>
+            <div class="tick lower" style="left:55.16%;"><span class="amount">7.995 kr</span><span class="label">3 måneder</span></div>
+            <div class="tick" style="left:68.95%;"><span class="amount">9.995 kr</span><span class="label">Halvt år</span></div>
+            <div class="tick lower" style="left:89.65%;"><span class="amount">12.995 kr</span><span class="label">9 måneder</span></div>
+            <div class="tick end" style="left:100%;"><span class="amount">14.495 kr</span><span class="label">1 år</span></div>
           </div>
         </div>
       </div>
@@ -571,7 +592,8 @@ const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
 const GOAL_DISTANCE=250; // fallback; actual goal computed as participants.length * 50
-const GOAL_DONATION=10000; // Mål: leje af fælles sauna
+const GOAL_DONATION=9995; // Primært mål: leje af fælles sauna (halvt år)
+const MAX_DONATION=14495; // Udvidet skala: mulighed for at samle op til 1 år
 let participants=[];
 let donors=[];
 let isAdmin=false;
@@ -856,7 +878,7 @@ function updateTotals(){
   const donorsCaption = document.getElementById("totalDonorsCaption");
   if(donorsCaption) donorsCaption.textContent = '';
 
-  const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
+  const donationProgress = Math.min(100, (totalDonationActual/MAX_DONATION)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
   const donationPotentialLabel = document.getElementById("donationPotentialLabel");
