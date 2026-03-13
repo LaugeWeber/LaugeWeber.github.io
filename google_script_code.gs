@@ -25,6 +25,7 @@ const EVENT_END_ISO = "2026-06-21T16:00:00";   // søndag d. 21/6 kl. 16
 const EVENT_LOCATION = "4. Maj Kollegiet";
 const EVENT_DESCRIPTION = "Kom og gå med til 4. Maj Walkathon — vi samler ind til fælles sauna!";
 const EVENT_TIMEZONE = "Europe/Copenhagen";
+const MAIN_PAGE_URL = "https://laugeweber.github.io/index.html";
 
 // Email rate limits (Google Apps Script)
 const MAX_EMAILS_PER_DAY = 100; // Juster efter dit account type
@@ -861,6 +862,8 @@ function sendSignupConfirmationEmail(email, name) {
       <p><strong>Hvor:</strong> ${escapeHtml(EVENT_LOCATION)}</p>
       <p style="margin-top:16px;">Klik på linket herunder for at føje begivenheden til din Google Kalender:</p>
       <p><a href="${calendarLink}" style="display:inline-block;padding:12px 16px;background:#0e7c86;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Tilføj til Google Kalender</a></p>
+      <p style="margin-top:16px;">Du kan altid finde den opdaterede oversigt her:</p>
+      <p><a href="${MAIN_PAGE_URL}" style="display:inline-block;padding:12px 16px;background:#132033;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Gå til main page</a></p>
       <p style="margin-top:18px;color:#666;">Du kan også importere vedhæftede kalenderfil (.ics) for automatisk at få en påmindelse 2 uger før.</p>
       <p style="margin-top:24px;">Med venlig hilsen<br><strong>Walkathon-teamet</strong></p>
     </div>
