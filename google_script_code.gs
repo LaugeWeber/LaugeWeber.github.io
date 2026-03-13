@@ -600,15 +600,17 @@ function sendAggregatedPaymentEmails() {
         continue;
       }
 
-      // Determine whether this row is marked as fulfilled (Indfriet)
+      // Determine fulfillment robustly:
+      // - No threshold means always fulfilled.
+      // - With threshold, accept either explicit Indfriet=JA or distance reaching threshold.
       let rowIndfrietRaw = '';
       if (idxIndfriet !== -1) {
         rowIndfrietRaw = (row[idxIndfriet] || '').toString();
       }
-
-      const isIndfriet = idxIndfriet !== -1
-        ? rowIndfrietRaw.toUpperCase() === 'JA'
-        : (threshold > 0 ? (distanceMap[modtager] || 0) >= threshold : true);
+      const distanceForRecipient = distanceMap[modtager] || 0;
+      const reachedThreshold = threshold > 0 ? distanceForRecipient >= threshold : true;
+      const isMarkedIndfriet = rowIndfrietRaw.toUpperCase() === 'JA';
+      const isIndfriet = threshold > 0 ? (isMarkedIndfriet || reachedThreshold) : true;
 
       if (!donorMap[mail]) {
         donorMap[mail] = {

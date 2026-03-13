@@ -148,6 +148,32 @@ header{
   padding:32px;
   box-shadow:var(--shadow);
 }
+.sauna-spotlight{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  margin-bottom:14px;
+  font-weight:800;
+  letter-spacing:.02em;
+  color:#6a3b00;
+  background:linear-gradient(135deg,#ffd48a 0%,#f2b705 100%);
+  box-shadow:0 8px 18px rgba(242,183,5,.28);
+}
+.sauna-spotlight .dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#b85d00;
+  box-shadow:0 0 0 6px rgba(184,93,0,.16);
+}
+.sauna-message{
+  margin:0 0 12px;
+  font-size:1.18rem;
+  font-weight:800;
+  color:#8a2d00;
+}
 .hero h1{font-size:2.8rem;margin-bottom:12px;}
 .hero p{color:var(--muted);line-height:1.7;}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
@@ -299,6 +325,8 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 <main class="wrap">
   <section class="hero">
     <div class="hero-card">
+      <div class="sauna-spotlight"><span class="dot"></span>Sauna-fond 2026</div>
+      <p class="sauna-message">Vi samler ind til en faelles sauna til kollegiet.</p>
       <h1>Walkathon overblik</h1>
       <p>Følg live med i distance, donationer og topindsamlinger til Kollegiets Store Gåtur.</p>
       <div class="event-date">
@@ -316,6 +344,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <div>
         <h2>👥 Med fellow alumner og venner</h2>
         <ul>
+          <li><strong>Vi samler ind til en faelles sauna</strong> til kollegiet</li>
           <li>Godt selskab og kanon god stemning</li>
           <li>Hyggelig udendørs lounge i haven</li>
           <li>Snacks og mulighed for at lave mad til døgnets måltider</li>
@@ -476,7 +505,7 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbwCJt47GsDGVJ_RJPpKtNkf8zrR-H5n9_THRl6TH7MEBFs4NgIP7ovt5NvxExNcsAHl/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbyC-rnAO-z2iwW4icV33IUsGTgX7WOTGay_Y6JJXIdiPBOzdjFPbmLEXO0Zz_PixcsmCQ/exec";
 const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
@@ -709,8 +738,8 @@ function updateAdminPreview(){
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
 
-  // Dynamic distance goal: number of participants * 50 km
-  const goalDistance = Math.max(0, participants.length * 50);
+  // Dynamic distance goal: number of participants * 50 km (never 0)
+  const goalDistance = Math.max(50, participants.length * 50);
 
   // Recompute totals using per-donation threshold logic
   let totalDonationActual = 0;
@@ -750,7 +779,7 @@ function updateTotals(){
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
   document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
-  document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${goalDistance} km`;
+  document.getElementById("distanceProgressLabel").textContent = `(${totalDistance.toFixed(1)}) / (${goalDistance}) km`;
 }
 
 /* UPDATE LEADERBOARDS */
