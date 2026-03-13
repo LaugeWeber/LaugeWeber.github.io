@@ -341,8 +341,10 @@ select option[disabled]{color:#999;}
         <div class="line"><span>Engangsbeløb</span><strong id="summaryFlat">0</strong></div>
         <div class="line"><span>Beløb pr. km</span><strong id="summaryPerKm">0</strong></div>
         <div class="line"><span>Tærskel (km)</span><strong id="summaryThreshold">-</strong></div>
-        <div class="line"><span>Estimat (nu)</span><strong id="summaryTotal">0</strong></div>
-        <div class="help">Estimatet beregnes ud fra deltagerens nuværende distance.</div>
+        <div class="line"><span>Skal betales nu</span><strong id="summaryPayNow">0</strong></div>
+        <div class="line"><span>Potentiale ved tærskel</span><strong id="summaryPotentialThreshold">0</strong></div>
+        <div class="help" id="summaryThresholdStatus">Ingen tærskel sat.</div>
+        <div class="help">"Skal betales nu" beregnes ud fra deltagerens nuværende distance. "Potentiale ved tærskel" viser beløbet ved tærsklen.</div>
       </div>
 
       <h3 style="margin-top:24px;">Seneste donationer</h3>
@@ -440,14 +442,28 @@ function updateSummary(){
   const perKm = toNumber(document.getElementById("sponsorPerKm").value || 0);
   const threshold = toNumber(document.getElementById("sponsorThreshold").value || 0);
   const triggered = threshold > 0 ? distance >= threshold : true;
-  const total = triggered ? (flat + perKm * distance) : 0;
+  const payNow = triggered ? (flat + perKm * distance) : 0;
+  const potentialAtThreshold = threshold > 0 ? (flat + perKm * threshold) : payNow;
 
   document.getElementById("summaryName").textContent = name;
   document.getElementById("summaryDistance").textContent = distance.toFixed(1);
   document.getElementById("summaryFlat").textContent = flat.toFixed(0);
   document.getElementById("summaryPerKm").textContent = perKm.toFixed(0);
   document.getElementById("summaryThreshold").textContent = threshold > 0 ? threshold.toFixed(1) : "-";
-  document.getElementById("summaryTotal").textContent = total.toFixed(0);
+  document.getElementById("summaryPayNow").textContent = payNow.toFixed(0);
+  document.getElementById("summaryPotentialThreshold").textContent = potentialAtThreshold.toFixed(0);
+
+  const thresholdStatus = document.getElementById("summaryThresholdStatus");
+  if(threshold <= 0){
+    thresholdStatus.textContent = "Ingen tærskel sat. Donationen gælder allerede nu.";
+    thresholdStatus.style.color = "";
+  } else if(triggered){
+    thresholdStatus.textContent = `Tærskel opfyldt (${distance.toFixed(1)} km af ${threshold.toFixed(1)} km).`;
+    thresholdStatus.style.color = "#0e7c86";
+  } else {
+    thresholdStatus.textContent = `Tærskel ikke opfyldt endnu (${distance.toFixed(1)} km af ${threshold.toFixed(1)} km).`;
+    thresholdStatus.style.color = "#b00020";
+  }
 
   updateSpotlight(name, distance);
 }
