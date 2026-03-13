@@ -579,6 +579,9 @@ function sendAggregatedPaymentEmails() {
     const idxPerKm = headers.indexOf("BeløbPrKm");
     const idxThreshold = headers.indexOf("ThresholdKm");
 
+    // Determine index of Indfriet column (if present)
+    const idxIndfriet = headers.indexOf("Indfriet");
+
     for (let i = 1; i < donationerData.length; i++) {
       const row = donationerData[i];
       const mailSentFlag = (mailSendtIndex !== -1) ? row[mailSendtIndex] : "";
@@ -597,6 +600,16 @@ function sendAggregatedPaymentEmails() {
         continue;
       }
 
+      // Determine whether this row is marked as fulfilled (Indfriet)
+      let rowIndfrietRaw = '';
+      if (idxIndfriet !== -1) {
+        rowIndfrietRaw = (row[idxIndfriet] || '').toString();
+      }
+
+      const isIndfriet = idxIndfriet !== -1
+        ? rowIndfrietRaw.toUpperCase() === 'JA'
+        : (threshold > 0 ? (distanceMap[modtager] || 0) >= threshold : true);
+
       if (!donorMap[mail]) {
         donorMap[mail] = {
           navn: donorNavn,
@@ -606,12 +619,13 @@ function sendAggregatedPaymentEmails() {
         };
       }
 
-      donorMap[mail].rows.push(i + 1);
+      donorMap[mail].rows.push({ rowNumber: i + 1, indfriet: isIndfriet });
       donorMap[mail].donationer.push({
         modtager: modtager,
         fastBeløb: fastBeløb,
         beløbPrKm: beløbPrKm,
-        threshold: threshold
+        threshold: threshold,
+        indfriet: isIndfriet
       });
     }
     
@@ -620,9 +634,10 @@ function sendAggregatedPaymentEmails() {
     for (const mail in donorMap) {
       const donor = donorMap[mail];
       donor.donationer.forEach(d => {
+        // Only include fulfilled (indfriet) donations in totals
+        if (!d.indfriet) return;
         const distance = distanceMap[d.modtager] || 0;
-        const triggered = d.threshold > 0 ? distance >= d.threshold : true;
-        const amount = triggered ? round2(d.fastBeløb + d.beløbPrKm * distance) : 0;
+        const amount = round2(d.fastBeløb + d.beløbPrKm * distance);
         totalEventSum += amount;
       });
     }
@@ -663,8 +678,7 @@ function sendAggregatedPaymentEmails() {
       
       donor.donationer.forEach(d => {
         const distance = distanceMap[d.modtager] || 0;
-        const triggered = d.threshold > 0 ? distance >= d.threshold : true;
-        const amount = triggered ? round2(d.fastBeløb + d.beløbPrKm * distance) : 0;
+        const amount = d.indfriet ? round2(d.fastBeløb + d.beløbPrKm * distance) : 0;
 
         totalDonorAmount += amount;
         totalDistanceForDonor += distance;
@@ -676,7 +690,7 @@ function sendAggregatedPaymentEmails() {
             <td style="padding: 8px; border: 1px solid #ddd;">${d.fastBeløb.toFixed(0)} kr</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${d.beløbPrKm.toFixed(0)} kr</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${d.threshold > 0 ? 'Kun hvis ≥ ' + d.threshold + ' km' : ''}</td>
-            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${amount.toFixed(0)} kr</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${d.indfriet ? '<strong>' + amount.toFixed(0) + ' kr</strong>' : 'Ikke indfriet'}</td>
           </tr>
         `;
       });
@@ -751,10 +765,10 @@ function sendAggregatedPaymentEmails() {
         mailCount++;
         Logger.log("Sent email to: " + (TEST_MODE ? TEST_EMAIL + " (test for " + mail + ")" : mail));
         
-        // Mark as sent (skip in test mode to allow re-testing)
+        // Mark fulfilled rows as sent (skip in test mode to allow re-testing)
         if (!TEST_MODE) {
-          donor.rows.forEach(rowNumber => {
-            donationerSheet.getRange(rowNumber, mailSendtIndex + 1).setValue("JA");
+          donor.rows.filter(r => r.indfriet).forEach(r => {
+            donationerSheet.getRange(r.rowNumber, mailSendtIndex + 1).setValue("JA");
           });
         }
         

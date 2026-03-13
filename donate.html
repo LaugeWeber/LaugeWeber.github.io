@@ -238,6 +238,17 @@ select option[disabled]{color:#999;}
   .hero{grid-template-columns:1fr;}
   .grid{grid-template-columns:1fr;}
   .row{grid-template-columns:1fr;}
+
+  /* Make CTA and quick-pick buttons full width on small screens */
+  .cta, .quick-picks button { width: 100%; }
+
+  /* Larger tap targets */
+  input, select, textarea { padding: 14px 16px; }
+}
+
+@media (max-width: 480px){
+  .spotlight div { display:block; margin-bottom:8px; }
+  .summary .line { flex-direction:column; align-items:flex-start; gap:6px; }
 }
 </style>
 </head>
@@ -355,7 +366,7 @@ select option[disabled]{color:#999;}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwsGuaj5e4ERNPmGYkgkBHmt1vXmBf0qae4xwxpg4-qpqhUWUg3KBXitG2IX746Feq6Tw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwCJt47GsDGVJ_RJPpKtNkf8zrR-H5n9_THRl6TH7MEBFs4NgIP7ovt5NvxExNcsAHl/exec";
 const ADMIN_KEY = "walkathon_admin";
 const ADMIN_CODE = "123";
 let participants = [];
