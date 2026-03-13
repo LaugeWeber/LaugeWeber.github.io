@@ -307,24 +307,21 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
       <span>Total donation</span>
       <strong id="totalDonationActual">0</strong>
       <div style="font-size:.9rem;color:var(--muted);margin-top:6px;">
-        Potentiel samlet: <strong id="totalDonationPotential">0</strong> kr
+        Potentielt samlet: <strong id="totalDonationPotential">0</strong>
       </div>
-      <span>kr lige nu</span>
     </div>
     <div class="card stat">
       <span>Total distance</span>
       <strong id="totalDistance">0.0</strong>
-      <span>km gået</span>
     </div>
     <div class="card stat">
-      <span>Aktive deltagere</span>
+      <span>Antal deltagere</span>
       <strong id="totalParticipants">0</strong>
-      <span>tilmeldt</span>
     </div>
     <div class="card stat">
-      <span>Donatorer</span>
+      <span>Donationer</span>
       <strong id="totalDonors">0</strong>
-      <span>unikke bidrag</span>
+      <span>antal donationer</span>
     </div>
   </section>
 
@@ -332,7 +329,6 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
     <div class="section-head">
       <div>
         <h2>Målsætninger</h2>
-        <p>Vi arbejder mod klare, motiverende mål for både distance og indsamling.</p>
       </div>
     </div>
     <div class="progress-grid">
@@ -366,11 +362,11 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
         <table id="leaderboardDistance"><tbody></tbody></table>
       </div>
       <div class="card">
-        <h3>Top 5 donatorer (beløb)</h3>
+        <h3>Top 5 donatorer (kr)</h3>
         <table id="leaderboardTopDonors"><tbody></tbody></table>
       </div>
       <div class="card">
-        <h3>Top 5 modtagere (beløb)</h3>
+        <h3>Top 5 modtagere (kr)</h3>
         <table id="leaderboardTopRecipients"><tbody></tbody></table>
       </div>
     </div>
@@ -455,11 +451,11 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycby6qZLffK9EpIIDNs5MYu7uMcSSTb6wE1K_KMs4Qc-cUZtA1nYNNAV-sM5k1JLOOfVuMg/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbwsGuaj5e4ERNPmGYkgkBHmt1vXmBf0qae4xwxpg4-qpqhUWUg3KBXitG2IX746Feq6Tw/exec";
 const ADMIN_KEY="walkathon_admin";
 const ADMIN_CODE="123";
 const EMAIL_ACTION="sendDonorEmails";
-const GOAL_DISTANCE=250;
+const GOAL_DISTANCE=250; // fallback; actual goal computed as participants.length * 50
 const GOAL_DONATION=10000; // Mål: leje af fælles sauna
 let participants=[];
 let donors=[];
@@ -683,6 +679,9 @@ function updateAdminPreview(){
 function updateTotals(){
   const totalDistance = participants.reduce((a,p)=>a+Number(p.Distance),0);
 
+  // Dynamic distance goal: number of participants * 50 km
+  const goalDistance = Math.max(0, participants.length * 50);
+
   // Recompute totals using per-donation threshold logic
   let totalDonationActual = 0;
   let totalDonationPotential = 0; // minimal guaranteed total (show with +)
@@ -704,22 +703,22 @@ function updateTotals(){
     totalDonationActual += actualAmount;
     totalDonationPotential += (triggered ? actualAmount : potentialAmount);
   });
-  const donorsUnique = new Set(donors.map(d=>d.Telefon)).size;
+  const donationCount = donors.length;
 
-  document.getElementById("totalDistance").textContent = totalDistance.toFixed(1);
-  document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0);
-  // Show plus sign to indicate "at least this amount"
-  document.getElementById("totalDonationPotential").textContent = '+' + totalDonationPotential.toFixed(0);
-  document.getElementById("totalParticipants").textContent = participants.length;
-  document.getElementById("totalDonors").textContent = donorsUnique;
+  document.getElementById("totalDistance").textContent = totalDistance.toFixed(1) + ' km';
+  document.getElementById("totalDonationActual").textContent = totalDonationActual.toFixed(0) + ' kr';
+  // Show plus sign after the potential number (e.g., "500+ kr")
+  document.getElementById("totalDonationPotential").textContent = totalDonationPotential.toFixed(0) + '+ kr';
+  document.getElementById("totalParticipants").textContent = participants.length + ' tilmeldt';
+  document.getElementById("totalDonors").textContent = donationCount;
 
   const donationProgress = Math.min(100, (totalDonationActual/GOAL_DONATION)*100 || 0);
-  const distanceProgress = Math.min(100, (totalDistance/GOAL_DISTANCE)*100 || 0);
+  const distanceProgress = Math.min(100, (totalDistance/goalDistance)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
   document.getElementById("distanceProgressBar").style.width = `${distanceProgress}%`;
   document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
-  document.getElementById("donationPotentialLabel").textContent = `+${totalDonationPotential.toFixed(0)} kr`;
-  document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${GOAL_DISTANCE} km`;
+  document.getElementById("donationPotentialLabel").textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
+  document.getElementById("distanceProgressLabel").textContent = `${totalDistance.toFixed(1)} / ${goalDistance} km`;
 }
 
 /* UPDATE LEADERBOARDS */

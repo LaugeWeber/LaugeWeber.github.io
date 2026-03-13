@@ -369,6 +369,24 @@ function readSheet(sheetName) {
     rows.push(row);
   }
   
+  // Backwards-compatibility: if Donationer-arket still bruger the old 'Besked' column
+  // to hold what should be 'ThresholdKm' (happens when sheet headers weren't updated),
+  // normalize rows so frontends can always read `ThresholdKm`.
+  if (sheetName === "Donationer") {
+    const hasThreshold = headers.indexOf("ThresholdKm") !== -1;
+    const hasBesked = headers.indexOf("Besked") !== -1;
+    if (!hasThreshold && hasBesked) {
+      for (let r = 0; r < rows.length; r++) {
+        const raw = rows[r]["Besked"];
+        // If the Besked cell looks like a number, treat it as ThresholdKm
+        const maybeNum = Number(raw);
+        rows[r]["ThresholdKm"] = isNaN(maybeNum) ? 0 : maybeNum;
+        // Remove Besked since messages were intentionally removed from the flow
+        delete rows[r]["Besked"];
+      }
+    }
+  }
+
   return rows;
 }
 
