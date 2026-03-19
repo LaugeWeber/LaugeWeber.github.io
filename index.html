@@ -250,24 +250,6 @@ header{
   box-shadow:0 10px 20px rgba(14,124,134,.28);
   transition:width .55s cubic-bezier(.2,.85,.35,1);
 }
-.goal-target-marker{
-  position:absolute;
-  top:-6px;
-  width:2px;
-  height:40px;
-  background:#8a2d00;
-  box-shadow:0 0 0 2px rgba(255,255,255,.7);
-}
-.goal-target-marker::after{
-  content:"Mål";
-  position:absolute;
-  top:-18px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:.72rem;
-  font-weight:800;
-  color:#8a2d00;
-}
 .goal-track{display:grid;gap:10px;}
 .goal-milestones{
   position:relative;
@@ -376,6 +358,9 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
   .progress-meta .meta-row{flex-direction:column;align-items:flex-start;gap:6px;}
   .progress-meta .meta-right{text-align:left;}
 
+  /* Keep milestone labels on mobile, hide price amounts to reduce clutter */
+  .goal-milestones .amount{display:none;}
+
   /* Buttons and CTAs full width for touch friendliness */
   .btn, .cta { width: 100%; }
 
@@ -457,20 +442,14 @@ footer{text-align:center;padding:28px;margin-top:40px;color:var(--muted);}
   </section>
 
   <section class="section">
-    <div class="section-head">
-      <div>
-        <h2>Målsætninger</h2>
-      </div>
-    </div>
     <div class="progress-grid">
       <div class="card">
-        <h3>Indsamling til sauna</h3>
+        <h3>Indsamling - leje af sauna til kollegiet.</h3>
         <div class="progress-meta">
-          <div class="meta-left">Mål: 9.995 kr (halvt år) · Maks: 14.495 kr (1 år)</div>
-          <span class="meta-right" id="donationProgressLabel">0 / 9.995 kr</span>
+          <span class="meta-right" id="donationProgressLabel">0 / 14.495 kr</span>
         </div>
         <div class="goal-track">
-          <div class="progress-bar"><span id="donationProgressBar"></span><div class="goal-target-marker" style="left:68.95%;" aria-hidden="true"></div></div>
+          <div class="progress-bar"><span id="donationProgressBar"></span></div>
           <div class="goal-milestones" aria-hidden="true">
             <div class="tick" style="left:14.45%;"><span class="amount">2.095 kr</span><span class="label">1 døgn</span></div>
             <div class="tick lower" style="left:19.97%;"><span class="amount">2.895 kr</span><span class="label">1 uge</span></div>
@@ -880,7 +859,7 @@ function updateTotals(){
 
   const donationProgress = Math.min(100, (totalDonationActual/MAX_DONATION)*100 || 0);
   document.getElementById("donationProgressBar").style.width = `${donationProgress}%`;
-  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${GOAL_DONATION} kr`;
+  document.getElementById("donationProgressLabel").textContent = `${totalDonationActual.toFixed(0)} / ${MAX_DONATION.toLocaleString('da-DK')} kr`;
   const donationPotentialLabel = document.getElementById("donationPotentialLabel");
   if(donationPotentialLabel) donationPotentialLabel.textContent = `${totalDonationPotential.toFixed(0)}+ kr`;
 }
